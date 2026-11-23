@@ -4,8 +4,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;700&display=swap">
 <style>
-/* Layout: plein écran 3D. HUD en puces dans les coins (lobby et partie ont chacun leurs outils),
-   panneaux en carte à gauche pour laisser l'avatar visible à droite. Monde unique assumé : thème sombre. */
+/* Layout: plein écran 3D. Menu d'accueil (catalogue de jeux) en colonne à gauche, avatar 3D visible à droite.
+   En jeu : HUD en puces dans les coins. Monde unique assumé (salles-piscines beiges) : un seul thème sombre. */
 :root{
   --ink:#f6f1e6;
   --ink-soft:#d6ccb8;
@@ -14,7 +14,6 @@
   --line:rgba(246,230,200,.18);
   --gold:#ffc93c;
   --pool:#7cc48a;
-  --sea:#3fc1d6;
   --blood:#ff2a1a;
   --font-display:"Bungee","Impact","Arial Black",system-ui,sans-serif;
   --font-body:"Rubik",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -24,8 +23,10 @@
 html,body{height:100%;overflow:hidden;background:#1b1710;}
 body{color:var(--ink);font-family:var(--font-body);-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;}
 #game{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none;}
-body:not([data-state="play"]) .only-play, body:not([data-state="lobby"]) .only-lobby{display:none!important;}
-body[data-state="intro"] .hud, body[data-state="intro"] .chatbox, body[data-panel] .touch-btn{display:none!important;}
+body:not([data-state="play"]):not([data-state="won"]) .only-play, body:not([data-state="salon"]) .only-salon{display:none!important;}
+body[data-state="intro"] .hud, body[data-state="hub"] .hud, body[data-state="intro"] .chatbox, body[data-state="hub"] .chatbox{display:none!important;}
+body[data-panel] .touch-btn, body[data-state="hub"] .touch-btn, body[data-state="intro"] .touch-btn{display:none!important;}
+body[data-panel="avatar"] .hub, body[data-panel="friends"] .hub{visibility:hidden;}
 
 .hud{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));
   display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;pointer-events:none;z-index:5;}
@@ -46,7 +47,7 @@ input{font:inherit;}
 button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px;}
 
 .toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 96px);transform:translate(-50%,-8px);opacity:0;transition:opacity .25s,transform .25s;
-  background:var(--panel-strong);border:1px solid var(--line);border-radius:14px;padding:10px 18px;text-align:center;pointer-events:none;z-index:6;max-width:calc(100% - 32px);}
+  background:var(--panel-strong);border:1px solid var(--line);border-radius:14px;padding:10px 18px;text-align:center;pointer-events:none;z-index:13;max-width:calc(100% - 32px);}
 .toast.show{opacity:1;transform:translate(-50%,0);}
 .toast small{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--pool);}
 .toast span{font-family:var(--font-display);font-size:18px;}
@@ -73,18 +74,71 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-o
 #scare svg{width:100%;height:100%;display:block;animation:shake .08s linear infinite;}
 @keyframes shake{0%{transform:translate(0,0) scale(1.04)}50%{transform:translate(-6px,4px) scale(1.07)}100%{transform:translate(5px,-3px) scale(1.04)}}
 
+/* Menu d'accueil */
+.hub{position:fixed;inset:0;z-index:8;background:linear-gradient(90deg,rgba(22,18,10,.96) 0,rgba(22,18,10,.93) 52%,rgba(22,18,10,.45) 72%,rgba(22,18,10,.05));}
+@media (max-width:860px){.hub{background:rgba(22,18,10,.93);}}
+.hub-inner{width:min(800px,100%);height:100%;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:18px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:16px;padding-block:calc(env(safe-area-inset-top,0px) + 14px) 28px;}
+@media (min-width:861px){.hub-inner{padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:28px;}}
+.hub-inner > *{flex-shrink:0;}
+.topbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.logo{font-family:var(--font-display);font-size:28px;letter-spacing:.02em;background:linear-gradient(180deg,#fff3cf,#e9c27a 55%,#b88a3e);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.search{flex:1;min-width:200px;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:14px;padding:0 12px;}
+.search svg{flex:none;opacity:.7;}
+.search input{flex:1;min-width:0;background:none;border:0;color:var(--ink);padding:12px 0;font-size:15px;outline:none;}
+.search input::placeholder{color:var(--ink-soft);}
+.search:focus-within{border-color:var(--gold);}
+.topbar2{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+.hello{font-size:20px;font-weight:700;}
+.pill{display:inline-flex;align-items:center;background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-family:var(--font-display);font-size:15px;font-variant-numeric:tabular-nums;}
+.cats{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+.cats::-webkit-scrollbar{display:none;}
+.cat{flex:none;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:500;}
+.cat[aria-pressed="true"]{background:var(--ink);color:#21190c;border-color:var(--ink);}
+.feature{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:18px;overflow:hidden;}
+@media (max-width:620px){.feature{grid-template-columns:1fr;}}
+.feature .th{aspect-ratio:16/9;background-size:cover;background-position:center;position:relative;}
+.feature .fb{padding:16px;display:flex;flex-direction:column;gap:8px;justify-content:center;min-width:0;}
+.feature h2{margin:0;font-family:var(--font-display);font-weight:400;font-size:24px;line-height:1.05;text-wrap:balance;}
+.feature p{margin:0;font-size:14px;line-height:1.45;color:var(--ink-soft);}
+.section{display:flex;flex-direction:column;gap:10px;min-width:0;}
+.section h3{margin:0;font-size:15px;font-weight:700;display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+.section h3 span{font-size:12px;font-weight:500;color:var(--ink-soft);}
+.strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(190px,210px);gap:12px;overflow-x:auto;padding-bottom:6px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;}
+.tile{text-align:left;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:14px;padding:0;overflow:hidden;display:flex;flex-direction:column;min-width:0;transition:transform .15s,border-color .15s;}
+.tile:hover{border-color:rgba(246,230,200,.45);transform:translateY(-2px);}
+.th{aspect-ratio:16/9;background-size:cover;background-position:center;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.th .art{font-family:var(--font-display);font-size:22px;color:rgba(255,255,255,.85);text-shadow:0 2px 0 rgba(0,0,0,.25);text-align:center;padding:0 8px;line-height:1;}
+.th .badge{position:absolute;left:8px;top:8px;}
+.tile .tt{padding:8px 10px 10px;display:flex;flex-direction:column;gap:2px;min-width:0;}
+.tile .tt b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tile .tt span{font-size:12px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:rgba(20,16,8,.75);color:var(--ink);border-radius:6px;padding:4px 7px;}
+.badge.new{background:var(--gold);color:#2a1d08;}
+.badge.live{background:#2f7f4a;color:#eaffef;}
+.empty{background:rgba(255,255,255,.04);border:1px dashed var(--line);border-radius:14px;padding:18px;color:var(--ink-soft);font-size:14px;line-height:1.5;}
+.hub-side{position:fixed;right:max(24px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 24px);z-index:9;display:none;}
+@media (min-width:861px){body[data-state="hub"]:not([data-panel]) .hub-side{display:block;}}
+
 .screen{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:calc(env(safe-area-inset-top,0px) + 16px) 16px;
   background:linear-gradient(90deg,rgba(20,16,8,.8),rgba(20,16,8,.15));}
 @media (min-width:860px){.screen.side{justify-content:flex-start;padding-left:max(5vw,env(safe-area-inset-left,0px));}}
+#detailScreen{z-index:12;background:rgba(14,11,6,.72);}
 .card{background:var(--panel-strong);border:1px solid var(--line);border-radius:20px;padding:24px 22px;max-width:480px;width:100%;display:flex;flex-direction:column;gap:14px;box-shadow:0 30px 80px rgba(0,0,0,.5);max-height:100%;overflow:auto;}
-.card h1{font-family:var(--font-display);font-weight:400;font-size:clamp(30px,8vw,44px);line-height:1;margin:0;text-wrap:balance;
+.card.detail{max-width:560px;padding:0;gap:0;}
+.detail .db{padding:18px 20px 20px;display:flex;flex-direction:column;gap:12px;}
+.card h1{font-family:var(--font-display);font-weight:400;font-size:clamp(28px,7vw,40px);line-height:1;margin:0;text-wrap:balance;
   background:linear-gradient(180deg,#fff3cf,#e9c27a 55%,#b88a3e);-webkit-background-clip:text;background-clip:text;color:transparent;}
 .card h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);margin:0;font-weight:700;}
 .card p{margin:0;line-height:1.5;color:var(--ink-soft);}
 .card .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-.card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;}
-.close{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:10px;padding:7px 12px;font-size:13px;}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.tags{display:flex;gap:6px;flex-wrap:wrap;}
+.tag{font-size:12px;background:rgba(255,255,255,.08);border-radius:999px;padding:4px 10px;}
+ul.how{margin:0;padding-left:18px;color:var(--ink-soft);font-size:14px;line-height:1.5;display:flex;flex-direction:column;gap:3px;}
+.close{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:10px;padding:7px 12px;font-size:13px;flex:none;}
 .field{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:12px;color:var(--ink);padding:11px 12px;font-size:16px;width:100%;}
 .controls{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:14px;align-items:center;}
 .controls kbd{font-family:var(--font-body);font-weight:700;font-size:12px;background:rgba(255,255,255,.1);border:1px solid var(--line);border-bottom-width:3px;border-radius:7px;padding:3px 7px;white-space:nowrap;justify-self:start;}
@@ -95,20 +149,12 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-o
 .go:disabled{filter:grayscale(1) brightness(.7);cursor:not-allowed;}
 .go.small{font-size:15px;padding:10px 14px;}
 .ghost{background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:12px;padding:11px 14px;font-weight:500;}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.stat{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center;}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.stat{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center;min-width:0;}
 .stat .lbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);display:block;}
-.stat b{font-family:var(--font-display);font-weight:400;font-size:20px;font-variant-numeric:tabular-nums;}
+.stat b{font-family:var(--font-display);font-weight:400;font-size:18px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;}
 .note{font-size:13px;color:var(--gold);}
 .muted{font-size:13px;color:var(--ink-soft);line-height:1.45;}
-
-.games{display:flex;flex-direction:column;gap:10px;}
-.game{display:grid;grid-template-columns:88px 1fr;gap:12px;align-items:center;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:14px;padding:10px;}
-.game .thumb{height:72px;border-radius:10px;}
-.game h3{margin:0 0 3px;font-family:var(--font-display);font-weight:400;font-size:17px;}
-.game .meta{font-size:12px;color:var(--ink-soft);margin-bottom:8px;}
-.game.soon{opacity:.6;}
-.badge{display:inline-block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;background:rgba(255,255,255,.12);border-radius:6px;padding:3px 7px;}
 
 .tabs{display:flex;gap:6px;flex-wrap:wrap;}
 .tab{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px;font-weight:500;}
@@ -116,7 +162,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-o
 .swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(42px,1fr));gap:8px;}
 .sw{aspect-ratio:1;border-radius:10px;border:2px solid rgba(255,255,255,.15);position:relative;padding:0;max-width:100%;}
 .sw[aria-pressed="true"]{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold);}
-.sw .tag{position:absolute;right:-4px;bottom:-6px;font-size:10px;font-weight:700;background:#2a2112;border:1px solid var(--gold);color:var(--gold);border-radius:6px;padding:0 4px;line-height:15px;}
+.sw .tagp{position:absolute;right:-4px;bottom:-6px;font-size:10px;font-weight:700;background:#2a2112;border:1px solid var(--gold);color:var(--gold);border-radius:6px;padding:0 4px;line-height:15px;}
 .items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
 .item{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:12px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;}
 .item[aria-pressed="true"]{border-color:var(--gold);background:rgba(255,201,60,.14);}
@@ -143,7 +189,7 @@ ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;c
 .touch-btn:active{filter:brightness(1.5);}
 .joy{position:fixed;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;border:2px solid rgba(246,241,230,.4);background:rgba(28,24,16,.3);pointer-events:none;z-index:5;}
 .joy i{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;background:rgba(246,241,230,.7);}
-@media (prefers-reduced-motion:reduce){.toast,#flash{transition:none;}#scare svg,.gain{animation:none;}}
+@media (prefers-reduced-motion:reduce){.toast,#flash,.tile{transition:none;}#scare svg,.gain{animation:none;}}
 </style>
 
 <canvas id="game" tabindex="0" aria-label="Jeu Rodzo"></canvas>
@@ -151,19 +197,16 @@ ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;c
 
 <div class="hud">
   <div class="chips">
-    <div class="chip only-play"><span class="lbl">Étape</span><b><span id="stage">1</span><span class="of">/ 9</span></b></div>
+    <div class="chip only-play"><span class="lbl" id="objLbl">Étape</span><b><span id="objVal">1</span><span class="of" id="objOf">/ 9</span></b></div>
     <div class="chip only-play"><span class="lbl">Temps</span><b id="time">0:00.0</b></div>
     <div class="chip only-play"><span class="lbl">Chutes</span><b id="deaths">0</b></div>
     <div class="chip only-play"><span class="lbl">Pierres</span><b><span id="stones">0</span><span class="of">/ 5</span></b></div>
     <div class="chip" id="walletChip"><span class="lbl">Rodzos</span><b><span class="coin"></span><span id="coins">0</span></b></div>
-    <div class="chip only-lobby"><span class="lbl">En ligne</span><b id="online">1</b></div>
+    <div class="chip only-salon"><span class="lbl">En ligne</span><b id="online">1</b></div>
   </div>
   <div class="tools">
-    <button class="tool only-lobby hl" id="btnGames" type="button">Jeux</button>
-    <button class="tool only-lobby" id="btnAvatar" type="button">Avatar</button>
-    <button class="tool only-lobby" id="btnFriends" type="button">Amis</button>
-    <button class="tool only-play" id="btnLobby" type="button">Lobby</button>
-    <button class="tool only-play" id="btnRespawn" type="button" title="Revenir au dernier point de sauvegarde (R)">Retour (R)</button>
+    <button class="tool hl" id="btnMenu" type="button">Menu</button>
+    <button class="tool only-play" id="btnRespawn" type="button" title="Revenir au point de départ (R)">Retour (R)</button>
     <button class="tool" id="btnSound" type="button">Son : oui</button>
     <button class="tool mouse-only" id="btnFull" type="button">Plein écran</button>
   </div>
@@ -201,51 +244,69 @@ ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;c
   </svg>
 </div>
 
-<!-- Accueil -->
+<!-- Accueil : pseudo -->
 <div class="screen side" id="introScreen">
   <form class="card" id="introForm" autocomplete="off">
     <h1>Rodzo</h1>
-    <p>Retrouve tes amis dans le lobby, personnalise ton avatar et choisis un jeu.</p>
+    <p>Choisis ton pseudo, personnalise ton avatar et lance un jeu, seul ou avec tes amis.</p>
     <h2><label for="nameIn">Ton pseudo</label></h2>
     <input class="field" id="nameIn" maxlength="16" placeholder="Pseudo" required>
     <div class="controls mouse-only">
       <kbd>ZQSD / WASD</kbd><span>Se déplacer</span>
-      <kbd>Espace</kbd><span>Sauter</span>
+      <kbd>Espace</kbd><span>Sauter (aussi pour sortir de l'eau)</span>
       <kbd>Souris</kbd><span>Clique sur le jeu puis bouge la souris pour tourner la caméra</span>
       <kbd>Entrée</kbd><span>Écrire aux autres joueurs</span>
     </div>
     <div class="controls touch-only">
       <kbd>Pouce gauche</kbd><span>Se déplacer</span>
-      <kbd>Bouton Saut</kbd><span>Sauter</span>
+      <kbd>Bouton Saut</kbd><span>Sauter (aussi pour sortir de l'eau)</span>
       <kbd>Glisser à droite</kbd><span>Tourner la caméra</span>
     </div>
-    <button class="go" type="submit">Entrer dans le lobby</button>
+    <button class="go" type="submit">Continuer</button>
   </form>
 </div>
 
-<!-- Jeux -->
-<div class="screen side" id="gamesScreen" hidden>
-  <div class="card">
-    <div class="card-head"><h1>Jeux</h1><button class="close" type="button" data-close>Fermer</button></div>
-    <div class="games">
-      <div class="game">
-        <div class="thumb" style="background:linear-gradient(160deg,#e9c27a,#7cc48a 60%,#18323a)"></div>
-        <div>
-          <h3>Rodzo Parkour</h3>
-          <div class="meta">9 étapes · monstre aquatique · <span id="inParkour">0 joueur</span></div>
-          <button class="go small" id="btnPlayParkour" type="button">Jouer</button>
-        </div>
-      </div>
-      <div class="game soon">
-        <div class="thumb" style="background:linear-gradient(160deg,#5a4a7e,#2a2440)"></div>
-        <div><h3>Cache-cache</h3><div class="meta">En préparation</div><span class="badge">Bientôt</span></div>
-      </div>
-      <div class="game soon">
-        <div class="thumb" style="background:linear-gradient(160deg,#3f8fa0,#1d3f52)"></div>
-        <div><h3>Course de bateaux</h3><div class="meta">En préparation</div><span class="badge">Bientôt</span></div>
+<!-- Menu d'accueil : catalogue -->
+<div class="hub" id="hub" hidden>
+  <div class="hub-inner">
+    <div class="topbar">
+      <div class="logo">RODZO</div>
+      <label class="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+        <input id="search" type="search" placeholder="Rechercher : tycoon, obby, horreur…" aria-label="Rechercher un jeu">
+      </label>
+    </div>
+    <div class="topbar2">
+      <div class="hello" id="hello">Salut !</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="pill"><span class="coin"></span><span id="coins3">0</span></span>
+        <button class="tool" id="hubAvatar" type="button">Avatar</button>
+        <button class="tool" id="hubFriends" type="button">Amis <span id="friendsN"></span></button>
       </div>
     </div>
-    <p class="muted">Les joueurs qui lancent le même jeu se voient pendant la partie.</p>
+    <div class="cats" id="cats" role="toolbar" aria-label="Catégories"></div>
+    <div id="hubContent" style="display:flex;flex-direction:column;gap:20px"></div>
+  </div>
+</div>
+<div class="hub-side"><button class="go small" id="sideAvatar" type="button">Modifier mon avatar</button></div>
+
+<!-- Fiche d'un jeu -->
+<div class="screen" id="detailScreen" hidden>
+  <div class="card detail">
+    <div class="th" id="dThumb"></div>
+    <div class="db">
+      <div class="card-head"><div><h1 id="dTitle"></h1><span class="muted">par Rodzo Studio</span></div><button class="close" type="button" data-close>Fermer</button></div>
+      <div class="tags" id="dTags"></div>
+      <p id="dDesc"></p>
+      <ul class="how" id="dHow"></ul>
+      <div class="stats">
+        <div class="stat"><span class="lbl">En ligne</span><b id="dOnline">0</b></div>
+        <div class="stat"><span class="lbl">Ton record</span><b id="dBest">–</b></div>
+        <div class="stat"><span class="lbl">Gains</span><b id="dReward">–</b></div>
+      </div>
+      <span class="muted" id="dFriends"></span>
+      <button class="go" id="dPlay" type="button">Jouer</button>
+    </div>
   </div>
 </div>
 
@@ -253,7 +314,7 @@ ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;c
 <div class="screen side" id="avatarScreen" hidden>
   <div class="card">
     <div class="card-head"><h1>Avatar</h1><button class="close" type="button" data-close>Fermer</button></div>
-    <div class="row"><span class="coin"></span><b id="coins2">0</b><span class="muted">Rodzos · gagne-en en jouant (étapes, arrivée, bonus du jour)</span></div>
+    <div class="row"><span class="coin"></span><b id="coins2">0</b><span class="muted">Rodzos · gagne-en en jouant (objectifs, arrivée, bonus du jour)</span></div>
     <div class="tabs" id="avTabs">
       <button class="tab" type="button" data-tab="colors" aria-pressed="true">Couleurs</button>
       <button class="tab" type="button" data-tab="hats" aria-pressed="false">Chapeaux</button>
@@ -275,7 +336,7 @@ ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;c
     <h2>Inviter des amis</h2>
     <ol class="steps">
       <li>Ouvre le menu <b>Partager</b> de cette page et invite tes amis avec leur adresse e-mail. Ils doivent avoir un compte Claude.</li>
-      <li>Envoie-leur le lien. Une fois connectés, ils apparaissent ici et dans le lobby.</li>
+      <li>Envoie-leur le lien. Une fois connectés, ils apparaissent ici, dans le Salon et dans les parties.</li>
     </ol>
     <div class="link"><input class="field" id="shareLink" readonly value="https://claude.ai/artifact/9X15dCXQvtvNv3afseCBTX" aria-label="Lien du jeu"><button class="ghost" id="btnCopy" type="button">Copier</button></div>
     <p class="muted">Avec le simple lien public, un ami peut jouer, mais seul : le jeu à plusieurs en direct demande une invitation par e-mail.</p>
@@ -285,15 +346,15 @@ ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;c
 <!-- Victoire -->
 <div class="screen" id="winScreen" hidden>
   <div class="card">
-    <h1>Sommet atteint !</h1>
-    <p>Tu as traversé les neuf étapes sans finir dans la gueule du monstre.</p>
+    <h1 id="winTitle">Bravo !</h1>
+    <p id="winText"></p>
     <div class="stats">
       <div class="stat"><span class="lbl">Temps</span><b id="winTime">0:00.0</b></div>
       <div class="stat"><span class="lbl">Chutes</span><b id="winDeaths">0</b></div>
       <div class="stat"><span class="lbl">Record</span><b id="winBest">–</b></div>
     </div>
     <span class="note" id="winNote"></span>
-    <div class="row"><button class="go" id="btnAgain" type="button" style="flex:1">Rejouer</button><button class="ghost" id="btnWinLobby" type="button">Lobby</button></div>
+    <div class="row"><button class="go" id="btnAgain" type="button" style="flex:1">Rejouer</button><button class="ghost" id="btnWinMenu" type="button">Menu</button></div>
   </div>
 </div>
 
@@ -303,19 +364,44 @@ ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;c
 const $ = id => document.getElementById(id);
 const V3 = THREE.Vector3;
 const STAGES = ['Premiers sauts','Le couloir piégé','Plates-formes mobiles','Dalles fragiles','La piscine embrumée','Le tremplin','Les poutres','La pale tournante','La tour finale'];
-const G = 34, SPEED = 8.5, SNEAK = 3.8, SWIM = 3.2, JUMP = 12.5, PAD = 22, HX = 0.4, HY = 1.8;
-const WATER_Y = -2, MAX_STONES = 5, RESCUE = 4;
+const G = 34, SPEED = 8.5, SNEAK = 3.8, SWIM = 3.2, JUMP = 12.5, PAD = 22, HX = 0.4, HY = 1.8, SWIM_JUMP = 14.5;
+const WATER_Y = -2, MAX_STONES = 5, RESCUE = 8, KEYS = 5;
 const HALL = {x0:34, x1:68, z0:-93, z1:-73};
 const POOL = {x0:40.6, x1:61.4, z0:-92.4, z1:-73.6};
 const LOBBY = {x:-200, z:0, x0:-222, x1:-178, z0:-22, z1:22};
+const PR = {x:400, z:0, x0:340, x1:460, z0:-60, z1:60, w:0};
 const inHall = (x, z, m = 0) => x > HALL.x0-m && x < HALL.x1+m && z > HALL.z0-m && z < HALL.z1+m;
-const inLobby = (x) => x < -150;
+const inLobby = x => x < -150;
+const inPR = x => x > 300;
+const waterLevel = x => inPR(x) ? PR.w : inLobby(x) ? -100 : WATER_Y;
 const regionOf = (x, z) => inHall(x, z) ? 'pool' : 'out';
 const wrapA = a => Math.atan2(Math.sin(a), Math.cos(a));
 const isTouch = matchMedia('(pointer:coarse)').matches;
 const css = n => '#' + n.toString(16).padStart(6, '0');
 const clean = (s, n) => String(s ?? '').replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁠-⁯﻿]/g, '').trim().slice(0, n);
+const norm = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const today = () => new Date().toISOString().slice(0, 10);
+
+/* ---------- Catalogue des jeux ---------- */
+const CATALOG = [
+  {id:'pool', name:'Les Salles-Piscines', tags:['Horreur','Exploration'], cats:['horreur'], play:true, isNew:true,
+    desc:'Une salle immense, carrelée et noyée de brume. Trouve les 5 jetons de vestiaire puis rejoins la sortie. Une créature noire marche sur les plateformes et nage dans l\'eau : elle ne voit rien, mais elle entend tes pas.',
+    how:['Maj ou joystick à moitié : marcher sans bruit','Clic ou F : lancer une pierre pour l\'attirer ailleurs','Espace dans l\'eau : sauter sur une plateforme'], reward:'150'},
+  {id:'parkour', name:'Rodzo Parkour', tags:['Obby','Horreur'], cats:['obby','horreur'], play:true,
+    desc:'Neuf étapes de sauts au-dessus d\'une eau sombre où rôde un serpent noir attiré par les éclaboussures. Piscine embrumée, pale tournante, tour finale.',
+    how:['Ramasse les pierres grises pour distraire le monstre','Espace dans l\'eau : sauter hors de l\'eau','R : revenir au dernier point de sauvegarde'], reward:'190'},
+  {id:'salon', name:'Salon Rodzo', tags:['Social'], cats:['social'], play:true,
+    desc:'Le lieu de rendez-vous : marche dans la grande salle-piscine, discute avec tes amis et montre ton avatar. Les portails du fond mènent aux jeux.',
+    how:['Entrée : écrire aux autres joueurs','Entre dans un portail pour ouvrir la fiche du jeu'], reward:'–'},
+  {id:'tycoon', name:'Rodzo Tycoon', tags:['Tycoon'], cats:['tycoon'], play:false, art:'TYCOON', bg:'linear-gradient(150deg,#3f8f4a,#1f4a28 60%,#ffc93c)',
+    desc:'Construis ton usine de cubes, achète des machines, agrandis ta base et deviens le plus riche du serveur.', how:[], reward:'–'},
+  {id:'cache', name:'Cache-cache', tags:['Mini-jeu','Social'], cats:['minijeu','social'], play:false, art:'CACHE-CACHE', bg:'linear-gradient(150deg,#5a4a7e,#2a2440)',
+    desc:'Un chercheur, tous les autres se cachent dans les salles-piscines. Le dernier trouvé gagne.', how:[], reward:'–'},
+  {id:'bateaux', name:'Course de bateaux', tags:['Course'], cats:['course'], play:false, art:'BATEAUX', bg:'linear-gradient(150deg,#3f8fa0,#1d3f52)',
+    desc:'Une course de bateaux à travers les bassins, avec des raccourcis et des pièges.', how:[], reward:'–'},
+];
+const CATS = [['tout','Tout'],['horreur','Horreur'],['obby','Obby'],['tycoon','Tycoon'],['social','Social'],['course','Course'],['minijeu','Mini-jeux']];
+const THUMBS = {};
 
 /* ---------- Catalogue de l'avatar ---------- */
 const COLORS = [
@@ -352,13 +438,15 @@ function validAv(a){
 }
 
 /* ---------- Sauvegarde (navigateur + compte si disponible) ---------- */
-let save = {name:'', coins:150, owned:[], av:{...DEFAULT_AV}, best:null, daily:'', updatedAt:0};
+let save = {name:'', coins:150, owned:[], av:{...DEFAULT_AV}, bests:{}, daily:'', updatedAt:0};
 function sanitizeSave(d){
+  const bests = {};
+  if (d?.bests && typeof d.bests === 'object') for (const k of ['parkour','pool']) if (Number(d.bests[k]) > 0) bests[k] = Number(d.bests[k]);
+  if (!bests.parkour && Number(d?.best) > 0) bests.parkour = Number(d.best);
   return {
     name: clean(d?.name, 16), coins: Math.max(0, Math.floor(Number(d?.coins) || 0)),
     owned: Array.isArray(d?.owned) ? d.owned.filter(x => typeof x === 'string').slice(0, 100) : [],
-    av: validAv(d?.av), best: Number(d?.best) > 0 ? Number(d.best) : null,
-    daily: typeof d?.daily === 'string' ? d.daily : '', updatedAt: Number(d?.updatedAt) || 0,
+    av: validAv(d?.av), bests, daily: typeof d?.daily === 'string' ? d.daily : '', updatedAt: Number(d?.updatedAt) || 0,
   };
 }
 try { const raw = localStorage.getItem('rodzo-save'); if (raw) save = sanitizeSave(JSON.parse(raw)); } catch(e){}
@@ -399,7 +487,10 @@ const skyC = document.createElement('canvas'); skyC.width = 2; skyC.height = 256
   gr.addColorStop(0,'#121a40'); gr.addColorStop(.5,'#5a3f7a'); gr.addColorStop(.8,'#d9806a'); gr.addColorStop(1,'#f5b98a');
   g.fillStyle = gr; g.fillRect(0,0,2,256); }
 scene.background = new THREE.CanvasTexture(skyC);
-const FOG = {out:{c:new THREE.Color(0xb27a8a), n:60, f:260}, hall:{c:new THREE.Color(0xd2c49a), n:1, f:30}, lobby:{c:new THREE.Color(0xd8caa2), n:3, f:60}};
+const FOG = {
+  out:{c:new THREE.Color(0xb27a8a), n:60, f:260}, hall:{c:new THREE.Color(0xd2c49a), n:1, f:30},
+  lobby:{c:new THREE.Color(0xd8caa2), n:3, f:60}, pr:{c:new THREE.Color(0xd9cca2), n:0.5, f:34},
+};
 scene.fog = new THREE.Fog(FOG.lobby.c.clone(), 3, 60);
 
 scene.add(new THREE.HemisphereLight(0xfff1dc, 0x4a5a48, 0.85));
@@ -447,8 +538,9 @@ water.rotation.x = -Math.PI/2; water.position.set(40, WATER_Y, -75); water.recei
 const deep = new THREE.Mesh(new THREE.PlaneGeometry(1400,1400), new THREE.MeshBasicMaterial({color:0x03121a}));
 deep.rotation.x = -Math.PI/2; deep.position.set(40, -12, -75); scene.add(deep);
 const greenTex = waveTex.clone(); greenTex.needsUpdate = true; greenTex.repeat.set(6,4);
-function greenWater(cx, y, cz, w, d){
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshPhongMaterial({color:0x4a8452, map:greenTex, transparent:true, opacity:0.92, shininess:70, specular:0xc8e0b0}));
+const greenTexBig = waveTex.clone(); greenTexBig.needsUpdate = true; greenTexBig.repeat.set(24,24);
+function greenWater(cx, y, cz, w, d, tex = greenTex){
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshPhongMaterial({color:0x4a8452, map:tex, transparent:true, opacity:0.92, shininess:70, specular:0xc8e0b0}));
   m.rotation.x = -Math.PI/2; m.position.set(cx, y, cz); m.receiveShadow = true; scene.add(m); return m;
 }
 
@@ -480,39 +572,42 @@ function P(x,top,z,w,d,o = {}){
 }
 function K(x,top,z,w,d,h = 0.6){ return addBox(x, top+h/2, z, w, h, d, {kill:true, color:0xff3b2a, emissive:0x9a1400}); }
 function W(x0,x1,y0,y1,z0,z1,o = {}){ return addBox((x0+x1)/2,(y0+y1)/2,(z0+z1)/2, x1-x0, y1-y0, z1-z0, Object.assign({wall:true, color:0xffffff, tex:POOLT}, o)); }
-const pillarMat = (() => { const t = POOLT.clone(); t.needsUpdate = true; t.repeat.set(5, 6); return new THREE.MeshLambertMaterial({color:0xffffff, map:t}); })();
+const pillarMat = (() => { const t = POOLT.clone(); t.needsUpdate = true; t.repeat.set(5, 8); return new THREE.MeshLambertMaterial({color:0xffffff, map:t}); })();
 function pillar(x, z, y0, y1, r = 1.1){
   const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, y1-y0, 28), pillarMat); m.position.set(x, (y0+y1)/2, z); m.castShadow = m.receiveShadow = true; scene.add(m);
   const s = {mesh:m, c:new V3(x,(y0+y1)/2,z), hs:new V3(r*0.85,(y1-y0)/2,r*0.85), min:new V3(), max:new V3(), solid:true, wall:true}; updBounds(s); solids.push(s);
+  return s;
 }
+const archMat = new THREE.MeshLambertMaterial({color:0x5a4628});
 function archRelief(x, z, rotY, w = 4, h = 6, y0 = 0){
-  const g = new THREE.Group(), mat = new THREE.MeshLambertMaterial({color:0x5a4628});
-  const hole = new THREE.Mesh(new THREE.PlaneGeometry(w, h - w/2), mat); hole.position.y = y0 + (h - w/2)/2; g.add(hole);
-  const top = new THREE.Mesh(new THREE.CircleGeometry(w/2, 24, 0, Math.PI), mat); top.position.y = y0 + h - w/2; g.add(top);
+  const g = new THREE.Group();
+  const hole = new THREE.Mesh(new THREE.PlaneGeometry(w, h - w/2), archMat); hole.position.y = y0 + (h - w/2)/2; g.add(hole);
+  const top = new THREE.Mesh(new THREE.CircleGeometry(w/2, 24, 0, Math.PI), archMat); top.position.y = y0 + h - w/2; g.add(top);
   g.position.set(x, 0, z); g.rotation.y = rotY; scene.add(g);
 }
 const S = (x,top,z) => stoneSpots.push(new V3(x, top, z));
+function textPlane(text, w, h, bg, fg, font = 'bold 54px Arial, sans-serif'){
+  const c = document.createElement('canvas'); c.width = 512; c.height = Math.round(512*h/w); const x = c.getContext('2d');
+  x.fillStyle = bg; x.fillRect(0,0,c.width,c.height); x.fillStyle = fg; x.font = font; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, c.width/2, c.height/2+2);
+  return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c)}));
+}
 
-// Étape 1 · Premiers sauts
+/* ===== Rodzo Parkour ===== */
 stageColor = 0x8fd6ff;
 P(0,0,0,10,10,{cp:0}); S(2.5,0,-2.5); S(-3,0,2);
 P(0,0.5,-9,3,3); P(2,1,-14,3,3); P(-1,1.5,-19,3,3); P(0,2,-24.5,3,3);
-// Étape 2 · Couloir piégé
 stageColor = 0xffd36e;
 P(0,2,-31,6,6,{cp:1}); S(2,2,-29.5);
 P(0,2,-42,4,16);
 [-36.5,-40,-43.5,-47].forEach(z => K(0,2,z,4,1));
-// Étape 3 · Plates-formes mobiles
 stageColor = 0xa898ff;
 P(0,2,-56,6,6,{cp:2}); S(-2,2,-57.5);
 P(0,2,-63,3,3,{move:{axis:'x',amp:3.5,speed:1.3,phase:0}});
 P(0,2.5,-69,3,3,{move:{axis:'x',amp:3.5,speed:1.3,phase:2.1}});
 P(0,3,-75,3,3,{move:{axis:'x',amp:3.5,speed:1.3,phase:4.2}});
-// Étape 4 · Dalles fragiles
 stageColor = 0x74e6b8;
 P(0,3.5,-83,6,6,{cp:3}); S(2,3.5,-85);
 [6.5,10.5,14.5,18.5].forEach(x => P(x,3.5,-83,2.5,2.5,{vanish:true, color:0xf1e4ff}));
-// Étape 5 · Piscine embrumée (style salles-piscines : carreaux beiges, eau verte, brume, piliers)
 stageColor = 0xff9fb6;
 P(25,3.5,-83,6,6,{cp:4}); S(24,3.5,-81);
 P(29.75,2,-83,2.5,3,{color:0xffffff, tex:POOLT}); P(32.25,0.5,-83,2.5,3,{color:0xffffff, tex:POOLT});
@@ -525,16 +620,13 @@ P(37.15,-1.5,-83,5.7,19.4,{color:0xffffff, tex:POOLT}); S(36,-1.5,-79); S(36.2,-
 [[46,-89],[56,-77],[49.5,-76.5],[58,-89.5]].forEach(([x,z]) => pillar(x, z, -6, 7));
 [[44,-92.65,0],[58,-92.65,0],[44,-73.35,Math.PI],[58,-73.35,Math.PI]].forEach(([x,z,r]) => archRelief(x, z, r, 3.6, 6, WATER_Y));
 greenWater(51, WATER_Y + 0.015, -83, 33.4, 19.4);
-// Étape 6 · Tremplin
 P(65,-1.5,-83,5.4,19.4,{cp:5, color:0xffffff, tex:POOLT}); S(66,-1.5,-78.5);
 P(72,-1.5,-83,4,4,{pad:true, color:0xffe14d, emissive:0x6a4a00});
-// Étape 7 · Poutres
 stageColor = 0xffb36e;
 P(80,4.5,-83,6,6,{cp:6}); S(82,4.5,-81.5);
 P(80,4.5,-90.5,1,7); P(80,4.5,-96,2.5,2.5);
 P(84.5,4.5,-96,6,1); P(89,4.5,-96,2.5,2.5);
 P(89,4.5,-101.5,1,8);
-// Étape 8 · Pale tournante
 stageColor = 0x86e3ff;
 P(89,4.5,-111,6,6,{cp:7}); S(87,4.5,-109.5);
 P(89,4.5,-123,10,10);
@@ -542,7 +634,6 @@ const spinner = {c:new V3(89,4.95,-123), half:new V3(7,0.3,0.3), angle:0, speed:
 spinner.mesh = new THREE.Mesh(new THREE.BoxGeometry(14,0.6,0.6), new THREE.MeshLambertMaterial({color:0xff3b2a, emissive:0x9a1400}));
 spinner.mesh.position.copy(spinner.c); spinner.mesh.castShadow = true; scene.add(spinner.mesh);
 { const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.7,0.9,1.2,20), new THREE.MeshLambertMaterial({color:0x30405c})); hub.position.set(89,5.1,-123); scene.add(hub); }
-// Étape 9 · Tour finale
 stageColor = 0xd3f27a;
 P(89,4.5,-135,6,6,{cp:8}); S(91,4.5,-136.5);
 const TC = {x:89, z:-146};
@@ -557,31 +648,22 @@ let flag;
   pole.position.set(TC.x+1.5, 19.5, TC.z-1.5); pole.castShadow = true; scene.add(pole);
   flag = new THREE.Mesh(new THREE.PlaneGeometry(1.8,1.1,10,1), new THREE.MeshLambertMaterial({color:0xffb627, emissive:0x6a3000, side:THREE.DoubleSide}));
   flag.position.set(TC.x+0.6, 20.8, TC.z-1.5); scene.add(flag); }
-
-/* Lampes, panneau et fumée de la piscine */
 const lampA = new THREE.PointLight(0xfff0d0, 0.9, 30), lampB = new THREE.PointLight(0xfff4dc, 0.8, 30);
 lampA.position.set(44,5.2,-83); lampB.position.set(58,5.2,-83); scene.add(lampA, lampB);
 [42,51,60].forEach(x => { const m = new THREE.Mesh(new THREE.BoxGeometry(2.2,0.15,0.5), new THREE.MeshBasicMaterial({color:0xfff6e0})); m.position.set(x,6.9,-83); scene.add(m); if (x === 60) lampB.userData.mesh = m; });
-function textPlane(text, w, h, bg, fg, font = 'bold 54px Arial, sans-serif'){
-  const c = document.createElement('canvas'); c.width = 512; c.height = Math.round(512*h/w); const x = c.getContext('2d');
-  x.fillStyle = bg; x.fillRect(0,0,c.width,c.height); x.fillStyle = fg; x.font = font; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, c.width/2, c.height/2+2);
-  return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c)}));
-}
 { const sign = textPlane('SORTIE', 2.4, 0.9, '#0b3a22', '#7dffb0', 'bold 110px Arial, sans-serif'); sign.position.set(67.6, 3.5, -83); sign.rotation.y = -Math.PI/2; scene.add(sign); }
 const smokeTex = makeTex((x, s) => { const g = x.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2); g.addColorStop(0,'rgba(255,255,255,.9)'); g.addColorStop(.5,'rgba(255,255,255,.35)'); g.addColorStop(1,'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0,0,s,s); });
 const smoke = [];
-function addSmoke(n, box, yLow, yHigh, color, base){
+function addSmoke(n, box, yLow, yHigh, color, base, size = 4){
   for (let i = 0; i < n; i++){
     const m = new THREE.Sprite(new THREE.SpriteMaterial({map:smokeTex, color, transparent:true, opacity:base, depthWrite:false}));
-    const sz = 4 + Math.random()*5; m.scale.set(sz, sz*0.7, 1);
+    const sz = size + Math.random()*size*1.2; m.scale.set(sz, sz*0.7, 1);
     m.position.set(box.x0 + Math.random()*(box.x1-box.x0), yLow + Math.random()*(yHigh-yLow), box.z0 + Math.random()*(box.z1-box.z0));
     smoke.push({m, box, vx:(Math.random()-.5)*0.5, vz:(Math.random()-.5)*0.4, ph:Math.random()*6, base}); scene.add(m);
   }
 }
 addSmoke(34, {x0:35,x1:67,z0:-92,z1:-74}, WATER_Y+0.3, WATER_Y+1.3, 0xefe2c0, 0.34);
 addSmoke(40, {x0:35,x1:67,z0:-92,z1:-74}, -1, 5, 0xe8dcbc, 0.22);
-
-/* Îles au loin */
 { const mat = new THREE.MeshLambertMaterial({color:0x3e4f6e});
   let seed = 7; const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
   for (let i = 0; i < 46; i++){
@@ -590,7 +672,7 @@ addSmoke(40, {x0:35,x1:67,z0:-92,z1:-74}, -1, 5, 0xe8dcbc, 0.22);
     m.position.set(40 + Math.cos(a)*r, -2 + rnd()*36, -75 + Math.sin(a)*r); m.rotation.y = rnd()*3; scene.add(m);
   } }
 
-/* ---------- Lobby ---------- */
+/* ===== Salon Rodzo ===== */
 const LX = LOBBY.x, LZ = LOBBY.z;
 const tileOpt = {color:0xffffff, tex:POOLT};
 P(LX, 0, LZ-13.5, 44, 17, tileOpt); P(LX, 0, LZ+13.5, 44, 17, tileOpt);
@@ -604,27 +686,108 @@ W(LOBBY.x0-0.6, LOBBY.x1+0.6, 12, 12.6, LOBBY.z0-0.6, LOBBY.z1+0.6, {noShadow:tr
 [[-216,22,Math.PI],[-184,22,Math.PI]].forEach(([x,z,r]) => archRelief(x, z - 0.02, r, 4, 7, 0));
 [[-222,-8,Math.PI/2],[-222,8,Math.PI/2],[-178,-8,-Math.PI/2],[-178,8,-Math.PI/2]].forEach(([x,z,r]) => archRelief(x + (r > 0 ? 0.02 : -0.02), z, r, 4, 7, 0));
 addSmoke(40, {x0:LOBBY.x0+1,x1:LOBBY.x1-1,z0:LOBBY.z0+1,z1:LOBBY.z1-1}, 0.3, 4, 0xefe4c6, 0.16);
-const lobbyLamps = [new THREE.PointLight(0xfff0d8, 0.8, 34), new THREE.PointLight(0xfff0d8, 0.8, 34)];
-lobbyLamps[0].position.set(LX-8, 10, LZ); lobbyLamps[1].position.set(LX+8, 10, LZ); scene.add(...lobbyLamps);
-// Portails vers les jeux
+{ const l1 = new THREE.PointLight(0xfff0d8, 0.8, 34), l2 = new THREE.PointLight(0xfff0d8, 0.8, 34); l1.position.set(LX-8, 10, LZ); l2.position.set(LX+8, 10, LZ); scene.add(l1, l2); }
 const portals = [];
-function portal(x, title, sub, active, colors){
+function portal(x, id, title, sub, active, colors){
   const g = new THREE.Group(), frameMat = new THREE.MeshLambertMaterial({color: active ? 0x8a6a34 : 0x5c5040});
   [[-2.1, 2.6, 0.5, 5.2],[2.1, 2.6, 0.5, 5.2],[0, 5.35, 4.7, 0.5]].forEach(([px,py,w,h]) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,0.6), frameMat); m.position.set(px,py,0); m.castShadow = true; g.add(m); });
   const c = document.createElement('canvas'); c.width = 256; c.height = 320; const ctx = c.getContext('2d');
   const gr = ctx.createLinearGradient(0,0,0,320); gr.addColorStop(0, colors[0]); gr.addColorStop(1, colors[1]); ctx.fillStyle = gr; ctx.fillRect(0,0,256,320);
-  const tex = new THREE.CanvasTexture(c);
-  const inner = new THREE.Mesh(new THREE.PlaneGeometry(3.7, 5.1), new THREE.MeshBasicMaterial({map:tex, transparent:true, opacity: active ? 0.92 : 0.6}));
+  const inner = new THREE.Mesh(new THREE.PlaneGeometry(3.7, 5.1), new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c), transparent:true, opacity: active ? 0.92 : 0.6}));
   inner.position.set(0, 2.55, 0.05); g.add(inner);
-  const label = textPlane(title, 5, 0.9, active ? '#2a1d08' : '#2a2620', active ? '#ffe39a' : '#bfb6a6', 'bold 50px Arial, sans-serif'); label.position.set(0, 6.3, 0.1); g.add(label);
+  const label = textPlane(title, 5, 0.9, active ? '#2a1d08' : '#2a2620', active ? '#ffe39a' : '#bfb6a6', 'bold 46px Arial, sans-serif'); label.position.set(0, 6.3, 0.1); g.add(label);
   const subl = textPlane(sub, 3.4, 0.5, active ? '#2a1d08' : '#2a2620', active ? '#e9d9b0' : '#9f978a', 'bold 56px Arial, sans-serif'); subl.position.set(0, 7.05, 0.1); g.add(subl);
   g.position.set(x, 0, LOBBY.z0 + 0.5); scene.add(g);
-  portals.push({x, active, inner, light: active ? (() => { const l = new THREE.PointLight(0x9ff0b0, 0.9, 9); l.position.set(x, 2.5, LOBBY.z0 + 2); scene.add(l); return l; })() : null});
+  let light = null; if (active){ light = new THREE.PointLight(0x9ff0b0, 0.9, 9); light.position.set(x, 2.5, LOBBY.z0 + 2); scene.add(light); }
+  portals.push({x, id, active, light});
 }
-portal(LX-10, 'CACHE-CACHE', 'BIENTÔT', false, ['#5a4a7e','#2a2440']);
-portal(LX, 'RODZO PARKOUR', 'JOUER', true, ['#e9c27a','#2f7f6a']);
-portal(LX+10, 'BATEAUX', 'BIENTÔT', false, ['#3f8fa0','#1d3f52']);
+portal(LX-10, 'pool', 'SALLES-PISCINES', 'JOUER', true, ['#d9cca2','#4a8452']);
+portal(LX, 'parkour', 'RODZO PARKOUR', 'JOUER', true, ['#e9c27a','#2f7f6a']);
+portal(LX+10, 'tycoon', 'RODZO TYCOON', 'BIENTÔT', false, ['#3f8f4a','#1f4a28']);
 const LOBBY_SPAWN = new V3(LX, 0, LZ + 15);
+
+/* ===== Les Salles-Piscines ===== */
+const prSlabs = [], prPillars = [], prKeys = [];
+const PRG = {spawn:new V3(PR.x0+6, 0.6, PR.z1-6), keys:0, open:false, door:new V3(PR.x1-6, 0.6, PR.z0+0.4)};
+{
+  let seed = 1337; const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+  const N = 10, C = 12;
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++){
+    const cx = PR.x0 + 6 + i*C, cz = PR.z0 + 6 + j*C;
+    const spawnCell = i === 0 && j === N-1, exitCell = i === N-1 && j === 0, fixed = spawnCell || exitCell;
+    const r = [rnd(), rnd(), rnd(), rnd(), rnd(), rnd()];
+    if (!fixed && r[0] < 0.2) continue;
+    const w = fixed ? 11 : 8 + r[1]*3, d = fixed ? 11 : 8 + r[2]*3;
+    const raised = !fixed && r[3] < 0.16, top = raised ? 1.8 : 0.6;
+    const ox = fixed ? 0 : (r[4]-.5)*1.2, oz = fixed ? 0 : (r[5]-.5)*1.2;
+    const s = P(cx+ox, top, cz+oz, w, d, {th: raised ? 2.2 : 1, color:0xffffff, tex:POOLT});
+    s.pr = true; s.cell = [i, j]; prSlabs.push(s);
+  }
+  for (let k = 1; k < N; k++) for (let l = 1; l < N; l++){
+    const x = PR.x0 + k*C, z = PR.z0 + l*C;
+    if (rnd() > 0.3) continue;
+    if (Math.hypot(x - PRG.spawn.x, z - PRG.spawn.z) < 10 || Math.hypot(x - PRG.door.x, z - PRG.door.z) < 10) continue;
+    pillar(x, z, -4, 16, 1.3); prPillars.push({x, z, r:1.3});
+  }
+  W(PR.x0-0.6, PR.x0, -4, 16, PR.z0-0.6, PR.z1+0.6); W(PR.x1, PR.x1+0.6, -4, 16, PR.z0-0.6, PR.z1+0.6);
+  W(PR.x0, PR.x1, -4, 16, PR.z0-0.6, PR.z0); W(PR.x0, PR.x1, -4, 16, PR.z1, PR.z1+0.6);
+  W(PR.x0-0.6, PR.x1+0.6, 16, 16.6, PR.z0-0.6, PR.z1+0.6, {noShadow:true});
+  for (let t = PR.x0 + 8; t < PR.x1 - 4; t += 15){
+    if (Math.abs(t - PRG.door.x) > 5) archRelief(t, PR.z0 + 0.02, 0, 4.5, 8, PR.w);
+    archRelief(t, PR.z1 - 0.02, Math.PI, 4.5, 8, PR.w);
+  }
+  for (let t = PR.z0 + 8; t < PR.z1 - 4; t += 15){ archRelief(PR.x0 + 0.02, t, Math.PI/2, 4.5, 8, PR.w); archRelief(PR.x1 - 0.02, t, -Math.PI/2, 4.5, 8, PR.w); }
+  greenWater(PR.x, PR.w + 0.01, PR.z, 120, 120, greenTexBig);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(120,120), new THREE.MeshBasicMaterial({color:0x1d3322})); floor.rotation.x = -Math.PI/2; floor.position.set(PR.x, -1.6, PR.z); scene.add(floor);
+  addSmoke(70, {x0:PR.x0+1,x1:PR.x1-1,z0:PR.z0+1,z1:PR.z1-1}, 0.4, 2.5, 0xf1e6c8, 0.3, 6);
+  addSmoke(50, {x0:PR.x0+1,x1:PR.x1-1,z0:PR.z0+1,z1:PR.z1-1}, 3, 12, 0xeadfbf, 0.18, 8);
+  [[-30,-30],[30,-30],[-30,30],[30,30],[0,0]].forEach(([x,z]) => { const l = new THREE.PointLight(0xfff0d0, 0.55, 55); l.position.set(PR.x+x, 13, PR.z+z); scene.add(l); });
+  // Échelles de piscine sur quelques bords
+  const chrome = new THREE.MeshPhongMaterial({color:0xdfe6ea, shininess:120, specular:0xffffff});
+  prSlabs.forEach((s, n) => {
+    if (n % 5 !== 2) return;
+    const x = s.c.x, z = s.max.z + 0.25, top = s.max.y;
+    for (const dx of [-0.45, 0.45]){
+      const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,2.6,8), chrome); rail.position.set(x+dx, top - 0.3, z); scene.add(rail);
+      const arc = new THREE.Mesh(new THREE.TorusGeometry(0.3,0.05,6,12,Math.PI), chrome); arc.position.set(x+dx, top + 1.0, z - 0.3); arc.rotation.y = Math.PI/2; scene.add(arc);
+    }
+    for (let k = 0; k < 3; k++){ const rung = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.9,6), chrome); rung.rotation.z = Math.PI/2; rung.position.set(x, top - 0.6 - k*0.5, z); scene.add(rung); }
+  });
+  // Jetons : les dalles les plus éloignées les unes des autres
+  const chosen = [];
+  const far = (s) => Math.min(Math.hypot(s.c.x - PRG.spawn.x, s.c.z - PRG.spawn.z), ...chosen.map(c => Math.hypot(s.c.x - c.c.x, s.c.z - c.c.z)));
+  for (let k = 0; k < KEYS; k++){
+    let best = null, bd = -1;
+    for (const s of prSlabs){ if (chosen.includes(s) || (s.cell[0] === N-1 && s.cell[1] === 0)) continue; const d = far(s); if (d > bd){ bd = d; best = s; } }
+    chosen.push(best);
+  }
+  const keyMat = new THREE.MeshPhongMaterial({color:0xffd166, emissive:0x8a5a00, shininess:90});
+  chosen.forEach(s => {
+    const g = new THREE.Group();
+    const ringM = new THREE.Mesh(new THREE.TorusGeometry(0.22,0.07,8,18), keyMat); ringM.position.y = 0.25; g.add(ringM);
+    const stem = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.55,0.08), keyMat); stem.position.y = -0.15; g.add(stem);
+    const bit = new THREE.Mesh(new THREE.BoxGeometry(0.2,0.08,0.08), keyMat); bit.position.set(0.1,-0.35,0); g.add(bit);
+    const halo = new THREE.Mesh(new THREE.RingGeometry(0.6,0.8,24), new THREE.MeshBasicMaterial({color:0xffe39a, transparent:true, opacity:0.4, depthWrite:false, side:THREE.DoubleSide}));
+    halo.rotation.x = -Math.PI/2; halo.position.y = -0.95; g.add(halo);
+    g.position.set(s.c.x, s.max.y + 1.0, s.c.z); scene.add(g);
+    prKeys.push({g, p:g.position.clone(), got:false});
+  });
+  prSlabs.forEach((s, n) => { if (n % 4 === 1 && !chosen.includes(s)) S(s.c.x + 1.5, s.max.y, s.c.z - 1.5); });
+  S(PRG.spawn.x + 2, 0.6, PRG.spawn.z - 2); S(PRG.spawn.x - 2.5, 0.6, PRG.spawn.z + 1);
+}
+const doorMat = new THREE.MeshBasicMaterial({color:0x151515});
+{ const g = new THREE.Group(), fm = new THREE.MeshLambertMaterial({color:0x8a6a34});
+  [[-1.5,2,0.4,4],[1.5,2,0.4,4],[0,4.1,3.4,0.4]].forEach(([x,y,w,h]) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,0.3), fm); m.position.set(x, PRG.door.y + y, 0); g.add(m); });
+  const inner = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 3.9), doorMat); inner.position.set(0, PRG.door.y + 1.95, 0.05); g.add(inner);
+  const sign = textPlane('SORTIE', 2.4, 0.8, '#0b3a22', '#7dffb0', 'bold 110px Arial, sans-serif'); sign.position.set(0, PRG.door.y + 4.9, 0.05); g.add(sign);
+  g.position.set(PRG.door.x, 0, PR.z0 + 0.05); scene.add(g);
+  PRG.doorLight = new THREE.PointLight(0x7dffb0, 0, 14); PRG.doorLight.position.set(PRG.door.x, 3, PR.z0 + 2); scene.add(PRG.doorLight); }
+function setDoor(open){ PRG.open = open; doorMat.color.set(open ? 0x6dff9a : 0x151515); PRG.doorLight.intensity = open ? 1.2 : 0; }
+function groundTop(x, z){
+  let best = null;
+  for (const s of prSlabs) if (x > s.min.x && x < s.max.x && z > s.min.z && z < s.max.z && (best === null || s.max.y > best)) best = s.max.y;
+  return best;
+}
 
 /* ---------- Avatars ---------- */
 function part(geo, mat, x, y, z, parent){ const m = new THREE.Mesh(geo, mat); m.position.set(x,y,z); m.castShadow = true; parent.add(m); return m; }
@@ -708,11 +871,12 @@ function setLabel(sp, text, bubble = false){
 }
 const heroBubble = labelSprite(); heroBubble.position.set(0, 3.25, 0); hero.add(heroBubble); setLabel(heroBubble, '', true);
 
-/* ---------- Le monstre ---------- */
+/* ---------- Monstres ---------- */
 const monMat = new THREE.MeshPhongMaterial({color:0x040406, specular:0x3a3a4c, shininess:80});
 const boneMat = new THREE.MeshLambertMaterial({color:0xd9cfb8});
 const redEye = new THREE.MeshBasicMaterial({color:0xff2414});
 const MS = 1.35;
+// Serpent de Rodzo Parkour
 const mHead = new THREE.Group(); mHead.rotation.order = 'YXZ'; mHead.scale.setScalar(MS); scene.add(mHead);
 part(B(1.2,0.6,1.6), monMat, 0,0.2,0.1, mHead);
 part(B(0.9,0.4,1.1), monMat, 0,0.12,1.3, mHead);
@@ -740,31 +904,63 @@ function initSegs(){ segs.forEach((s,i) => { s.p.set(mon.pos.x, mon.pos.y, mon.p
 function setMonsterVisible(v){ if (mon.visible === v) return; mon.visible = v; mHead.visible = v; segs.forEach(s => s.g.visible = v); }
 initSegs();
 
+// Rampeur des Salles-Piscines : marche à quatre pattes et nage
+const crG = new THREE.Group(); crG.scale.setScalar(1.35); scene.add(crG);
+const crBody = new THREE.Group(); crBody.position.y = 0.9; crBody.rotation.order = 'YXZ'; crG.add(crBody);
+part(B(0.7,0.42,1.9), monMat, 0,0,0, crBody);
+part(B(0.5,0.3,0.6), monMat, 0,-0.05,-1.1, crBody);
+for (let i = 0; i < 6; i++){ const s = part(new THREE.ConeGeometry(0.07,0.38,5), monMat, 0,0.3,-0.85+i*0.32, crBody); s.rotation.x = -0.5; }
+{ const ribMat = new THREE.MeshLambertMaterial({color:0x1a1a1e}); for (let i = 0; i < 4; i++) for (const sx of [-1,1]) part(B(0.05,0.32,0.06), ribMat, sx*0.37,-0.02,-0.45+i*0.3, crBody); }
+const crHead = new THREE.Group(); crHead.position.set(0,0.12,1.1); crBody.add(crHead);
+part(B(0.5,0.4,0.7), monMat, 0,0.05,0.25, crHead);
+const crJaw = new THREE.Group(); crJaw.position.set(0,-0.12,0); crHead.add(crJaw);
+part(B(0.44,0.12,0.7), monMat, 0,-0.05,0.3, crJaw);
+for (let i = 0; i < 5; i++){ const x = -0.18 + i*0.09;
+  part(new THREE.ConeGeometry(0.03,0.16,4), boneMat, x,-0.17,0.58, crHead).rotation.x = Math.PI;
+  part(new THREE.ConeGeometry(0.03,0.14,4), boneMat, x,0.03,0.6, crJaw); }
+[[0.15,0.2,0.56,0.05],[0.21,0.13,0.42,0.04],[0.09,0.25,0.5,0.03]].forEach(([x,y,z,r]) => { for (const sx of [-1,1]) part(new THREE.SphereGeometry(r,8,6), redEye, sx*x,y,z, crHead); });
+const crLight = new THREE.PointLight(0xff2010, 0.3, 7); crLight.position.set(0,0.2,0.8); crHead.add(crLight);
+const crLegs = [];
+[[1,0.65,0],[-1,0.65,Math.PI],[1,-0.7,Math.PI],[-1,-0.7,0]].forEach(([side, z, phase]) => {
+  const hip = new THREE.Group(); hip.position.set(side*0.36, 0, z); crBody.add(hip);
+  part(B(0.12,0.85,0.12), monMat, 0,-0.425,0, hip);
+  const knee = new THREE.Group(); knee.position.set(0,-0.85,0); knee.rotation.z = -side*1.9; hip.add(knee);
+  part(B(0.09,1.45,0.09), monMat, 0,-0.725,0, knee);
+  part(new THREE.ConeGeometry(0.06,0.25,5), boneMat, 0,-1.5,0.06, knee).rotation.x = Math.PI;
+  hip.rotation.z = side*2.2; crLegs.push({hip, side, phase});
+});
+const cr = {pos:new V3(PR.x1-20, 0.6, PR.z0+20), y:0.6, dir:0, state:'roam', target:new V3(), timer:0, lastL:0, ignoreBelow:0, ignoreT:0,
+  noChase:0, attackT:0, gait:0, swim:false, clickT:0, wakeT:0, speed:0, visible:true};
+function setCrawlerVisible(v){ if (cr.visible === v) return; cr.visible = v; crG.visible = v; }
+
 /* ---------- État ---------- */
 const pl = {pos:new V3(), vel:new V3(), face:0};
 let grounded = false, prevGrounded = false, ground = null, coyote = 0, jumpBuf = 0, deadT = 0;
-let swimming = false, swimT = 0, strokeT = 0, stepT = 0, wet = false, sneaking = false, caught = false, throwAnim = 0;
-let cp = 0, deaths = 0, runTime = 0, worldT = 0, state = 'intro', panel = null, runFromStart = true, runCps = new Set();
+let swimming = false, swimT = 0, strokeT = 0, stepT = 0, wet = false, sneaking = false, caught = false, throwAnim = 0, lastNoiseT = -10;
+let cp = 0, deaths = 0, runTime = 0, worldT = 0, state = 'intro', panel = null, game = null, runFromStart = true, runCps = new Set();
 let stones = 0, flying = [], pickups = [];
 let yaw = 0, pitch = 0.42, dist = isTouch ? 11 : 10;
 const cam = {yaw:0.4, pitch:0.2, dist:6};
 const keys = {}, joy = {id:null, x:0, y:0, ox:0, oy:0}, looks = new Map();
 const camTarget = new V3();
 const seenTips = new Set();
-const where = () => (state === 'play' || state === 'won') ? 'parkour' : 'lobby';
-const setState = s => { state = s; document.body.dataset.state = s; };
+const others = new Map();
+const inGame = () => state === 'play' || state === 'won';
+const where = () => inGame() ? game : state === 'salon' ? 'salon' : 'hub';
+const setState = s => { state = s; document.body.dataset.state = s; $('hub').hidden = s !== 'hub'; };
+const SCREENS = ['detailScreen','avatarScreen','friendsScreen'];
 function setPanel(p){
   panel = p;
-  ['gamesScreen','avatarScreen','friendsScreen'].forEach(id => $(id).hidden = true);
-  if (p) { $(p + 'Screen').hidden = false; document.body.dataset.panel = p; document.exitPointerLock?.(); for (const k in keys) keys[k] = false; }
-  else { delete document.body.dataset.panel; canvas.focus(); }
+  SCREENS.forEach(id => $(id).hidden = true);
+  if (p){ $(p + 'Screen').hidden = false; document.body.dataset.panel = p; document.exitPointerLock?.(); for (const k in keys) keys[k] = false; }
+  else { delete document.body.dataset.panel; if (state !== 'hub') canvas.focus(); }
 }
 
 /* ---------- Son ---------- */
 let actx = null, soundOn = true, noiseBuf = null;
 function audioOn(){ if (!actx){ try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} } actx?.resume?.(); }
 function tone(f, dur, type = 'square', vol = .06, slide = 0, delay = 0){
-  if (!actx || !soundOn) return;
+  if (!actx || !soundOn || vol <= 0.0005) return;
   const t = actx.currentTime + delay, o = actx.createOscillator(), g = actx.createGain();
   o.type = type; o.frequency.setValueAtTime(f, t);
   if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f+slide), t+dur);
@@ -792,35 +988,38 @@ const sfx = {
   whoosh: () => hiss(0.2, 0.06, 'highpass', 2200, 0.7),
   clack:  () => tone(1300,.06,'triangle',.06,-400),
   pickup: () => { tone(880,.08,'triangle',.06); tone(1320,.1,'triangle',.06,0,.07); },
+  key:    () => { tone(784,.1,'triangle',.08); tone(1175,.12,'triangle',.08,0,.09); tone(1568,.2,'triangle',.07,0,.18); },
   coin:   () => { tone(988,.08,'square',.04); tone(1319,.16,'square',.04,0,.08); },
   heart:  (v) => { tone(58,.13,'sine',.3*v,-12); tone(52,.15,'sine',.24*v,-12,.17); },
   roar:   () => { hiss(1.2,0.4,'lowpass',520,1); tone(92,1.1,'sawtooth',.2,-50); tone(61,1.1,'square',.12,-22); tone(140,.8,'sawtooth',.08,-90,.05); },
+  click:  (v) => { tone(1900,.025,'square',.06*v); tone(1500,.025,'square',.05*v,0,.07); },
   chat:   () => tone(740,.07,'sine',.05),
 };
 
 /* ---------- Effets d'eau ---------- */
 const fx = [];
 const ringGeo = new THREE.RingGeometry(0.35, 0.5, 28);
-function ring(x, z, size = 1, color = 0xe8fbff, y = WATER_Y){
+function ring(x, z, size = 1, color = 0xe8fbff, y = waterLevel(x)){
   const m = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({color, transparent:true, opacity:0.8, depthWrite:false}));
   m.rotation.x = -Math.PI/2; m.position.set(x, y + 0.04, z); scene.add(m);
   fx.push({m, kind:'ring', life:1, max:1, size});
 }
 function splash(x, z, k = 1){
-  ring(x, z, 1.6*k); ring(x, z, 0.9*k);
+  const wl = waterLevel(x);
+  ring(x, z, 1.6*k, 0xe8fbff, wl); ring(x, z, 0.9*k, 0xe8fbff, wl);
   const n = Math.round(14*k);
   for (let i = 0; i < n; i++){
     const m = new THREE.Mesh(new THREE.SphereGeometry(0.07 + Math.random()*0.06, 6, 4), new THREE.MeshBasicMaterial({color:0xdff7ff, transparent:true, opacity:0.9}));
-    m.position.set(x, WATER_Y + 0.1, z); scene.add(m);
+    m.position.set(x, wl + 0.1, z); scene.add(m);
     const a = Math.random()*Math.PI*2, s = 1 + Math.random()*2.5*k;
-    fx.push({m, kind:'drop', life:1.2, max:1.2, v:new V3(Math.cos(a)*s, 4 + Math.random()*5*k, Math.sin(a)*s)});
+    fx.push({m, kind:'drop', life:1.2, max:1.2, wl, v:new V3(Math.cos(a)*s, 4 + Math.random()*5*k, Math.sin(a)*s)});
   }
 }
 function updateFx(dt){
   for (let i = fx.length-1; i >= 0; i--){
     const f = fx[i]; f.life -= dt; const k = 1 - f.life/f.max;
     if (f.kind === 'ring'){ const s = (0.6 + k*3.2)*f.size; f.m.scale.set(s, s, s); f.m.material.opacity = 0.8*(1-k); }
-    else { f.v.y -= 20*dt; f.m.position.addScaledVector(f.v, dt); if (f.m.position.y < WATER_Y) f.life = 0; }
+    else { f.v.y -= 20*dt; f.m.position.addScaledVector(f.v, dt); if (f.m.position.y < f.wl) f.life = 0; }
     if (f.life <= 0){ scene.remove(f.m); if (f.kind !== 'ring') f.m.geometry.dispose(); f.m.material.dispose(); fx.splice(i,1); }
   }
 }
@@ -840,10 +1039,10 @@ function throwOrigin(){ return new V3(pl.pos.x - Math.sin(yaw)*0.5, pl.pos.y + (
 function throwVel(){ const el = Math.max(0.12, 0.8 - pitch*0.6), sp = 17; return new V3(-Math.sin(yaw)*Math.cos(el)*sp, Math.sin(el)*sp, -Math.cos(yaw)*Math.cos(el)*sp); }
 const insideBox = (s, p) => p.x > s.min.x && p.x < s.max.x && p.y > s.min.y && p.y < s.max.y && p.z > s.min.z && p.z < s.max.z;
 function predict(){
-  const p = throwOrigin(), v = throwVel();
+  const p = throwOrigin(), v = throwVel(), wl = waterLevel(p.x);
   for (let i = 0; i < 160; i++){
     v.y -= 20*0.025; p.addScaledVector(v, 0.025);
-    if (p.y < WATER_Y) return {x:p.x, y:WATER_Y+0.04, z:p.z, water:true};
+    if (p.y < wl) return {x:p.x, y:wl+0.04, z:p.z, water:true};
     for (const s of solids) if (s.solid && insideBox(s, p)) return {x:p.x, y:s.max.y+0.04, z:p.z, water:false};
   }
   return null;
@@ -859,8 +1058,8 @@ function updateStones(dt){
   for (let i = flying.length-1; i >= 0; i--){
     const f = flying[i]; f.v.y -= 20*dt; f.p.addScaledVector(f.v, dt); f.life -= dt; f.m.position.copy(f.p); f.m.rotation.x += dt*8;
     let done = f.life <= 0;
-    if (f.p.y < WATER_Y){ splash(f.p.x, f.p.z, 0.8); sfx.splash(0.7); makeNoise(f.p.x, f.p.z, 10); done = true; }
-    else for (const s of solids) if (s.solid && insideBox(s, f.p)){ sfx.clack(); done = true; break; }
+    if (f.p.y < waterLevel(f.p.x)){ splash(f.p.x, f.p.z, 0.8); sfx.splash(0.7); makeNoise(f.p.x, f.p.z, 10); done = true; }
+    else for (const s of solids) if (s.solid && insideBox(s, f.p)){ sfx.clack(); if (game === 'pool') makeNoise(f.p.x, f.p.z, 7); done = true; break; }
     if (done){ scene.remove(f.m); flying.splice(i,1); }
   }
   for (const k of pickups){
@@ -868,7 +1067,7 @@ function updateStones(dt){
     k.m.position.y = k.p.y + 0.25 + Math.sin(worldT*2.5 + k.p.x)*0.06; k.m.rotation.y += dt;
     if (state === 'play' && deadT <= 0 && stones < MAX_STONES && Math.hypot(pl.pos.x-k.p.x, pl.pos.z-k.p.z) < 1.2 && Math.abs(pl.pos.y-k.p.y) < 1.6){
       k.active = false; k.t = 15; k.m.visible = k.halo.visible = false; stones++; $('stones').textContent = stones; sfx.pickup();
-      if (!seenTips.has('stone')){ seenTips.add('stone'); tip(isTouch ? 'Pierre ramassée ! Bouton Lancer pour la jeter dans l\'eau : le monstre ira voir.' : 'Pierre ramassée ! Clic ou F pour la lancer. Le cercle blanc montre où elle tombera.', 5); }
+      if (!seenTips.has('stone')){ seenTips.add('stone'); tip(isTouch ? 'Pierre ramassée ! Bouton Lancer : le monstre ira voir où elle tombe.' : 'Pierre ramassée ! Clic ou F pour la lancer : le monstre ira voir où elle tombe. Le cercle montre l\'endroit.', 5); }
     }
   }
 }
@@ -878,8 +1077,12 @@ const fmt = t => `${Math.floor(t/60)}:${(t%60).toFixed(1).padStart(4,'0')}`;
 let toastTimer = 0, tipTimer = 0;
 function toast(small, big){ $('toastSmall').textContent = small; $('toastBig').textContent = big; $('toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('show'), 2300); }
 function tip(text, secs, warn = false){ const t = $('tip'); t.textContent = text; t.classList.toggle('warn', warn); t.hidden = false; clearTimeout(tipTimer); if (secs) tipTimer = setTimeout(() => t.hidden = true, secs*1000); }
-function showStage(){ $('stage').textContent = cp+1; toast(`Étape ${cp+1} sur ${STAGES.length}`, STAGES[cp]); }
-function renderCoins(){ $('coins').textContent = save.coins; $('coins2').textContent = save.coins; }
+function renderObjective(){
+  if (game === 'pool'){ $('objLbl').textContent = 'Jetons'; $('objVal').textContent = PRG.keys; $('objOf').textContent = `/ ${KEYS}`; }
+  else { $('objLbl').textContent = 'Étape'; $('objVal').textContent = cp + 1; $('objOf').textContent = `/ ${STAGES.length}`; }
+}
+function showStage(){ renderObjective(); toast(`Étape ${cp+1} sur ${STAGES.length}`, STAGES[cp]); }
+function renderCoins(){ ['coins','coins2','coins3'].forEach(id => $(id).textContent = save.coins); }
 renderCoins();
 function paintCps(){ cps.forEach((s,k) => { s.cpMesh.material.color.set(k <= cp ? 0x5ee3c1 : 0xbfc9d6); s.cpMesh.material.emissive.set(k <= cp ? 0x0f5a48 : 0x000000); }); }
 
@@ -888,11 +1091,15 @@ function setCheckpoint(i){
   if (!runCps.has(i)){ runCps.add(i); setTimeout(() => { addCoins(10); sfx.coin(); }, 400); }
   if (i === 4) tip(isTouch ? 'La piscine : les dalles au ras de l\'eau font du bruit. Pousse le joystick à moitié pour marcher sans bruit, ou lance une pierre au loin d\'abord.' : 'La piscine : les dalles au ras de l\'eau font du bruit. Maj pour marcher sans bruit, ou lance une pierre au loin d\'abord.', 8);
 }
+function spawnPoint(){
+  if (inGame()) return game === 'pool' ? PRG.spawn : cps[cp].spawn;
+  return LOBBY_SPAWN;
+}
 function respawn(){
-  const s = state === 'lobby' || state === 'intro' ? LOBBY_SPAWN : cps[cp].spawn;
-  pl.pos.copy(s); pl.vel.set(0,0,0); grounded = true; ground = null; hero.visible = true;
+  pl.pos.copy(spawnPoint()); pl.vel.set(0,0,0); grounded = true; ground = null; hero.visible = true;
   swimming = false; caught = false; wet = false;
-  yaw = (state === 'play' && cp >= 3 && cp <= 5) ? -Math.PI/2 : 0; pl.face = yaw + Math.PI;
+  yaw = !inGame() ? 0 : game === 'pool' ? -Math.PI/4 : (cp >= 3 && cp <= 5) ? -Math.PI/2 : 0;
+  pl.face = inGame() || state === 'salon' ? yaw + Math.PI : 0;
   if ($('tip').classList.contains('warn')) $('tip').hidden = true;
 }
 function hurt(){
@@ -900,51 +1107,156 @@ function hurt(){
   deaths++; $('deaths').textContent = deaths; deadT = 0.45; hero.visible = false; sfx.hurt();
   $('flash').style.opacity = .45; setTimeout(() => $('flash').style.opacity = 0, 120);
 }
-function startGame(fromCp = 0){
-  audioOn(); setPanel(null);
+function startGame(id, fromCp = 0){
+  if (id === 'salon') return enterSalon();
+  audioOn(); setPanel(null); game = id;
   runTime = 0; deaths = 0; stones = 0; runFromStart = fromCp === 0; runCps = new Set([fromCp]);
   setState('play'); $('winScreen').hidden = true;
-  cp = fromCp; paintCps(); respawn(); showStage(); relocateMonster(); setMonsterVisible(true);
+  flying.forEach(f => scene.remove(f.m)); flying = [];
+  if (id === 'parkour'){ cp = fromCp; paintCps(); }
+  else { PRG.keys = 0; prKeys.forEach(k => { k.got = false; k.g.visible = true; }); setDoor(false); cp = 0; }
+  respawn(); renderObjective();
+  if (id === 'parkour'){ showStage(); relocateMonster(); }
+  else { toast('Les Salles-Piscines', `Trouve les ${KEYS} jetons`); crRelocate(true); }
   $('deaths').textContent = 0; $('stones').textContent = 0; canvas.focus(); sendPresence(true);
-  if (!seenTips.has('start')){ seenTips.add('start'); tip('Une créature vit dans l\'eau et entend chaque éclaboussure. Ramasse les pierres grises : lancées dans l\'eau, elles l\'attirent ailleurs.', 7); }
+  if (id === 'pool' && !seenTips.has('pool')){ seenTips.add('pool'); tip('Quelque chose marche dans la brume. Il entend tes pas : Maj pour marcher sans bruit, pierres pour l\'attirer ailleurs.', 8); }
+  else if (id === 'parkour' && !seenTips.has('start')){ seenTips.add('start'); tip('Une créature vit dans l\'eau et entend chaque éclaboussure. Si tu tombes : Espace pour sauter sur une plateforme.', 7); }
 }
-function goLobby(){
-  setPanel(null); $('winScreen').hidden = true; setState('lobby'); respawn(); setMonsterVisible(false);
-  $('danger').style.opacity = 0; $('tip').hidden = true; sendPresence(true);
+function enterSalon(){
+  audioOn(); setPanel(null); $('winScreen').hidden = true; game = null; setState('salon'); respawn();
+  $('danger').style.opacity = 0; $('tip').hidden = true; sendPresence(true); canvas.focus();
+}
+function goHub(){
+  setPanel(null); $('winScreen').hidden = true; game = null; setState('hub'); respawn(); document.exitPointerLock?.();
+  $('danger').style.opacity = 0; $('tip').hidden = true; sendPresence(true); renderHub();
   if (save.daily !== today()){ save.daily = today(); setTimeout(() => { addCoins(50, 'Bonus du jour'); sfx.coin(); }, 600); }
 }
 function win(){
   setState('won'); sfx.win(); burst(); document.exitPointerLock?.();
-  const record = !save.best || runTime < save.best;
-  if (record && runFromStart){ save.best = runTime; persist(); }
-  const reward = runFromStart ? 100 : 30;
+  const prev = save.bests[game], record = runFromStart && (!prev || runTime < prev);
+  if (record){ save.bests[game] = runTime; persist(); }
+  const reward = game === 'pool' ? 150 : runFromStart ? 100 : 30;
   addCoins(reward); sfx.coin();
-  $('winTime').textContent = fmt(runTime); $('winDeaths').textContent = deaths; $('winBest').textContent = save.best ? fmt(save.best) : '–';
-  $('winNote').textContent = `+${reward} Rodzos` + (runFromStart ? (record ? ' · Nouveau record !' : ` · Encore ${fmt(runTime - save.best)} pour battre ton record.`) : ' · Pars de l\'étape 1 pour un record.');
+  $('winTitle').textContent = game === 'pool' ? 'Tu t\'es échappé !' : 'Sommet atteint !';
+  $('winText').textContent = game === 'pool' ? 'Tu as trouvé les cinq jetons et quitté les Salles-Piscines.' : 'Tu as traversé les neuf étapes sans finir dans la gueule du monstre.';
+  $('winTime').textContent = fmt(runTime); $('winDeaths').textContent = deaths; $('winBest').textContent = save.bests[game] ? fmt(save.bests[game]) : '–';
+  $('winNote').textContent = `+${reward} Rodzos` + (runFromStart ? (record ? ' · Nouveau record !' : ` · Encore ${fmt(runTime - save.bests[game])} pour battre ton record.`) : ' · Pars du début pour un record.');
   setTimeout(() => { $('winScreen').hidden = false; }, 1400);
   sendPresence(true);
 }
 
-/* Écran d'accueil */
+/* Accueil */
 $('nameIn').value = save.name;
 $('introForm').addEventListener('submit', e => {
   e.preventDefault(); const n = clean($('nameIn').value, 16); if (!n) return;
-  save.name = n; persist(); audioOn(); $('introScreen').hidden = true; goLobby();
+  save.name = n; persist(); audioOn(); $('introScreen').hidden = true; goHub();
 });
 
-/* Jeux */
-$('btnGames').addEventListener('click', () => setPanel('games'));
-$('btnPlayParkour').addEventListener('click', () => startGame(0));
-$('btnAgain').addEventListener('click', () => startGame(0));
-$('btnWinLobby').addEventListener('click', goLobby);
-$('btnLobby').addEventListener('click', goLobby);
+/* ---------- Menu d'accueil : recherche, catégories, fiches ---------- */
+let hubCat = 'tout', hubQuery = '';
+const onlineIn = id => [...others.values()].filter(o => o.d?.w === id).length + (where() === id ? 1 : 0);
+function thumbStyle(el, g){
+  if (THUMBS[g.id]) el.style.backgroundImage = `url(${THUMBS[g.id]})`;
+  else {
+    el.style.background = g.bg || 'linear-gradient(150deg,#6a5a3a,#2a2112)';
+    const a = document.createElement('span'); a.className = 'art'; a.textContent = g.art || g.name.toUpperCase(); el.appendChild(a);
+  }
+}
+function tileEl(g){
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'tile';
+  const th = document.createElement('div'); th.className = 'th'; thumbStyle(th, g);
+  const n = g.play ? onlineIn(g.id) : 0;
+  if (!g.play){ const s = document.createElement('span'); s.className = 'badge'; s.textContent = 'Bientôt'; th.appendChild(s); }
+  else if (n > 0){ const s = document.createElement('span'); s.className = 'badge live'; s.textContent = `${n} en ligne`; th.appendChild(s); }
+  else if (g.isNew){ const s = document.createElement('span'); s.className = 'badge new'; s.textContent = 'Nouveau'; th.appendChild(s); }
+  const tt = document.createElement('div'); tt.className = 'tt';
+  const t = document.createElement('b'); t.textContent = g.name; const m = document.createElement('span'); m.textContent = g.tags.join(' · ');
+  tt.append(t, m); b.append(th, tt);
+  b.addEventListener('click', () => openDetail(g.id));
+  return b;
+}
+function section(title, list, note = ''){
+  const s = document.createElement('div'); s.className = 'section';
+  const h = document.createElement('h3'); h.textContent = title; if (note){ const sp = document.createElement('span'); sp.textContent = note; h.appendChild(sp); }
+  const strip = document.createElement('div'); strip.className = 'strip';
+  list.forEach(g => strip.appendChild(tileEl(g)));
+  s.append(h, strip); return s;
+}
+function renderCats(){
+  const box = $('cats'); box.textContent = '';
+  for (const [id, label] of CATS){
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'cat'; b.textContent = label;
+    b.setAttribute('aria-pressed', String(hubCat === id));
+    b.addEventListener('click', () => { hubCat = id; renderHub(); });
+    box.appendChild(b);
+  }
+}
+function renderHub(){
+  $('hello').textContent = `Salut, ${save.name || 'joueur'} !`;
+  const fr = others.size; $('friendsN').textContent = fr ? `(${fr})` : '';
+  renderCats();
+  const box = $('hubContent'); box.textContent = '';
+  const q = norm(hubQuery.trim());
+  if (!q && hubCat === 'tout'){
+    const f = CATALOG.find(g => g.id === 'pool');
+    const feat = document.createElement('div'); feat.className = 'feature';
+    const th = document.createElement('div'); th.className = 'th'; thumbStyle(th, f);
+    const bd = document.createElement('span'); bd.className = 'badge new'; bd.textContent = 'Nouveau'; th.appendChild(bd);
+    const fb = document.createElement('div'); fb.className = 'fb';
+    const h = document.createElement('h2'); h.textContent = f.name;
+    const p = document.createElement('p'); p.textContent = 'Une salle immense noyée de brume. Une créature marche dans le noir. Trouve les jetons et sors.';
+    const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap';
+    const play = document.createElement('button'); play.type = 'button'; play.className = 'go small'; play.textContent = 'Jouer'; play.addEventListener('click', () => startGame(f.id));
+    const more = document.createElement('button'); more.type = 'button'; more.className = 'ghost'; more.textContent = 'Détails'; more.addEventListener('click', () => openDetail(f.id));
+    row.append(play, more); fb.append(h, p, row); feat.append(th, fb); box.appendChild(feat);
+    box.appendChild(section('Jouables maintenant', CATALOG.filter(g => g.play)));
+    box.appendChild(section('Horreur', CATALOG.filter(g => g.cats.includes('horreur'))));
+    box.appendChild(section('Bientôt', CATALOG.filter(g => !g.play), 'Tycoon, cache-cache, course…'));
+    return;
+  }
+  const list = CATALOG.filter(g => (hubCat === 'tout' || g.cats.includes(hubCat)) &&
+    (!q || norm([g.name, ...g.tags, g.desc].join(' ')).includes(q)));
+  const s = document.createElement('div'); s.className = 'section';
+  const h = document.createElement('h3');
+  const catName = CATS.find(c => c[0] === hubCat)[1];
+  h.textContent = q ? `Résultats pour « ${hubQuery.trim()} »` : catName;
+  const cnt = document.createElement('span'); cnt.textContent = `${list.length} jeu${list.length > 1 ? 'x' : ''}`; h.appendChild(cnt);
+  s.appendChild(h);
+  if (list.length){ const grid = document.createElement('div'); grid.className = 'grid'; list.forEach(g => grid.appendChild(tileEl(g))); s.appendChild(grid); }
+  else { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'Aucun jeu ne correspond. Essaie « obby », « horreur » ou « tycoon ».'; s.appendChild(e); }
+  box.appendChild(s);
+}
+$('search').addEventListener('input', e => { hubQuery = e.target.value; renderHub(); });
+let detailId = null;
+function openDetail(id){
+  const g = CATALOG.find(x => x.id === id); if (!g) return; detailId = id;
+  const th = $('dThumb'); th.textContent = ''; th.removeAttribute('style'); thumbStyle(th, g);
+  if (!g.play){ const s = document.createElement('span'); s.className = 'badge'; s.textContent = 'Bientôt'; th.appendChild(s); }
+  $('dTitle').textContent = g.name; $('dDesc').textContent = g.desc;
+  const tags = $('dTags'); tags.textContent = ''; g.tags.forEach(t => { const s = document.createElement('span'); s.className = 'tag'; s.textContent = t; tags.appendChild(s); });
+  const how = $('dHow'); how.textContent = ''; g.how.forEach(t => { const li = document.createElement('li'); li.textContent = t; how.appendChild(li); }); how.hidden = !g.how.length;
+  $('dOnline').textContent = g.play ? onlineIn(g.id) : '–';
+  $('dBest').textContent = save.bests[g.id] ? fmt(save.bests[g.id]) : '–';
+  $('dReward').textContent = g.reward;
+  const friends = [...others.values()].filter(o => o.d?.w === g.id).map(o => o.d.n);
+  $('dFriends').textContent = friends.length ? `Dedans maintenant : ${friends.join(', ')}` : '';
+  $('dPlay').disabled = !g.play; $('dPlay').textContent = g.play ? (g.id === 'salon' ? 'Entrer' : 'Jouer') : 'Bientôt disponible';
+  setPanel('detail');
+}
+$('dPlay').addEventListener('click', () => { if (detailId) startGame(detailId); });
+$('hubAvatar').addEventListener('click', openAvatar);
+$('sideAvatar').addEventListener('click', openAvatar);
+$('hubFriends').addEventListener('click', () => { setPanel('friends'); renderPeople(); });
+$('btnMenu').addEventListener('click', goHub);
+$('btnAgain').addEventListener('click', () => startGame(game || 'parkour'));
+$('btnWinMenu').addEventListener('click', goHub);
 document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closePanel));
-function closePanel(){ if (panel === 'avatar') leaveEditor(); setPanel(null); }
+function closePanel(){ if (panel === 'avatar') leaveEditor(); setPanel(null); if (state === 'hub') renderHub(); }
 addEventListener('keydown', e => { if (e.key === 'Escape' && panel) closePanel(); });
 
 /* Éditeur d'avatar */
 let edit = {tab:'colors', part:'t', av:null, pending:null};
-$('btnAvatar').addEventListener('click', () => { edit.av = {...save.av}; edit.pending = null; setPanel('avatar'); renderEditor(); });
+function openAvatar(){ edit.av = {...save.av}; edit.pending = null; setPanel('avatar'); renderEditor(); }
 $('avTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (!b) return; edit.tab = b.dataset.tab; renderEditor(); });
 function choose(key, field, value){
   edit.av[field] = value; heroAv.apply(edit.av);
@@ -966,7 +1278,7 @@ function renderEditor(){
       b.style.background = c.glow ? `radial-gradient(circle at 35% 30%, #fff8 0, ${css(c.hex)} 45%, ${css(c.glow)})` : css(c.hex);
       b.setAttribute('aria-label', `${c.name}, ${priceTag(key)}`); b.title = `${c.name} · ${priceTag(key)}`;
       b.setAttribute('aria-pressed', String(edit.av[edit.part] === c.id));
-      if (c.price && !owns(key)){ const t = document.createElement('span'); t.className = 'tag'; t.textContent = c.price; b.appendChild(t); }
+      if (c.price && !owns(key)){ const t = document.createElement('span'); t.className = 'tagp'; t.textContent = c.price; b.appendChild(t); }
       b.addEventListener('click', () => choose(key, edit.part, c.id));
       grid.appendChild(b);
     }
@@ -1001,16 +1313,13 @@ $('btnBuy').addEventListener('click', () => {
   persist(); renderCoins(); sfx.coin(); toast('Acheté', 'Ajouté à ton avatar'); sendPresence(true); renderEditor();
 });
 
-/* Amis */
-$('btnFriends').addEventListener('click', () => { setPanel('friends'); renderPeople(); });
 $('btnCopy').addEventListener('click', () => {
   const v = $('shareLink').value;
   const done = () => { $('btnCopy').textContent = 'Copié'; setTimeout(() => $('btnCopy').textContent = 'Copier', 1500); };
   try { navigator.clipboard.writeText(v).then(done, () => { $('shareLink').select(); }); } catch(e){ $('shareLink').select(); }
 });
-
 $('btnSound').addEventListener('click', () => { soundOn = !soundOn; $('btnSound').textContent = `Son : ${soundOn ? 'oui' : 'non'}`; canvas.focus(); });
-$('btnRespawn').addEventListener('click', () => { if (state === 'play' && !swimming && deadT <= 0) respawn(); canvas.focus(); });
+$('btnRespawn').addEventListener('click', () => { if (state === 'play' && deadT <= 0 && !caught) respawn(); canvas.focus(); });
 $('btnFull').addEventListener('click', () => {
   try {
     if (document.fullscreenElement) document.exitFullscreen?.();
@@ -1021,7 +1330,7 @@ document.addEventListener('fullscreenchange', () => $('btnFull').textContent = d
 
 /* ---------- Multijoueur (room) ---------- */
 let room = null, mpState = 'off', mySay = null, lastSent = '', sendT = 0;
-const others = new Map();
+const PLACES = {hub:'Dans le menu', salon:'Salon Rodzo', parkour:'Rodzo Parkour', pool:'Les Salles-Piscines'};
 function addChatLine(name, text){
   const log = $('chatlog'), d = document.createElement('div');
   if (name){ const b = document.createElement('b'); b.textContent = name; d.appendChild(b); }
@@ -1036,7 +1345,7 @@ $('chatForm').addEventListener('submit', e => {
   sendPresence(true); sfx.chat();
 });
 function myPresence(){
-  return {n: save.name || 'Joueur', av: save.av, w: where(), c: cp,
+  return {n: save.name || 'Joueur', av: save.av, w: where(), c: game === 'pool' ? PRG.keys : cp,
     p: [+pl.pos.x.toFixed(2), +pl.pos.y.toFixed(2), +pl.pos.z.toFixed(2)], f: +pl.face.toFixed(2),
     m: swimming ? 2 : (grounded ? 0 : 1), s: mySay};
 }
@@ -1048,7 +1357,7 @@ function sendPresence(force = false){
 }
 function peerData(peer){
   const pr = peer.presence || {}; if (!Array.isArray(pr.p) || pr.p.length !== 3 || !pr.p.every(Number.isFinite)) return null;
-  return {n: clean(pr.n, 16) || 'Joueur', av: validAv(pr.av), w: pr.w === 'parkour' ? 'parkour' : 'lobby', c: Number.isInteger(pr.c) && pr.c >= 0 && pr.c < cps.length ? pr.c : 0,
+  return {n: clean(pr.n, 16) || 'Joueur', av: validAv(pr.av), w: Object.keys(PLACES).includes(pr.w) ? pr.w : 'hub', c: Number.isInteger(pr.c) && pr.c >= 0 && pr.c < cps.length ? pr.c : 0,
     p: pr.p, f: Number.isFinite(pr.f) ? pr.f : 0, m: [0,1,2].includes(pr.m) ? pr.m : 0,
     s: pr.s && typeof pr.s === 'object' && Number.isFinite(pr.s.t) ? {t:pr.s.t, x:clean(pr.s.x, 80)} : null};
 }
@@ -1079,25 +1388,30 @@ function syncPeers(list){
   }
   renderOnline();
 }
+let hubRenderT = 0;
 function renderOnline(){
   $('online').textContent = others.size + 1;
-  const inP = [...others.values()].filter(o => o.d?.w === 'parkour').length + (where() === 'parkour' ? 1 : 0);
-  $('inParkour').textContent = `${inP} joueur${inP > 1 ? 's' : ''}`;
   if (panel === 'friends') renderPeople();
+  if (state === 'hub' && !panel){ clearTimeout(hubRenderT); hubRenderT = setTimeout(renderHub, 400); }
 }
 function renderPeople(){
   const box = $('people'); box.textContent = '';
-  const row = (name, place, joinCp) => {
+  const row = (name, place, join) => {
     const r = document.createElement('div'); r.className = 'person';
     const dot = document.createElement('span'); dot.className = 'dot';
     const who = document.createElement('div'); who.className = 'who';
     const b = document.createElement('b'); b.textContent = name; const s = document.createElement('span'); s.textContent = place; who.append(b, s);
     r.append(dot, who);
-    if (joinCp !== null){ const j = document.createElement('button'); j.type = 'button'; j.className = 'go small'; j.textContent = 'Rejoindre'; j.addEventListener('click', () => startGame(joinCp)); r.appendChild(j); }
+    if (join){ const j = document.createElement('button'); j.type = 'button'; j.className = 'go small'; j.textContent = 'Rejoindre'; j.addEventListener('click', join); r.appendChild(j); }
     box.appendChild(r);
   };
-  row(`${save.name || 'Moi'} (toi)`, where() === 'parkour' ? 'Rodzo Parkour' : 'Lobby', null);
-  for (const o of others.values()) if (o.d) row(o.d.n + (o.guest ? ' · invité' : ''), o.d.w === 'parkour' ? `Rodzo Parkour · étape ${o.d.c + 1}` : 'Lobby', o.d.w === 'parkour' ? o.d.c : null);
+  row(`${save.name || 'Moi'} (toi)`, PLACES[where()], null);
+  for (const o of others.values()) if (o.d){
+    const w = o.d.w;
+    const place = w === 'parkour' ? `Rodzo Parkour · étape ${o.d.c + 1}` : w === 'pool' ? `Les Salles-Piscines · ${o.d.c} jeton${o.d.c > 1 ? 's' : ''}` : PLACES[w];
+    const join = w === 'parkour' ? () => startGame('parkour', o.d.c) : w === 'pool' ? () => startGame('pool') : w === 'salon' ? enterSalon : null;
+    row(o.d.n + (o.guest ? ' · invité' : ''), place, join);
+  }
   $('mpState').textContent = mpState === 'on' ? (others.size ? '' : 'Personne d\'autre pour l\'instant. Invite tes amis ci-dessous.')
     : mpState === 'wait' ? 'Connexion au salon en cours…'
     : 'Le jeu à plusieurs n\'est pas disponible sur cet affichage : tu joues en solo. Il marche quand la page est ouverte sur claude.ai par une personne connectée et invitée.';
@@ -1105,7 +1419,7 @@ function renderPeople(){
 function updateOthers(dt){
   const me = where(), now = performance.now();
   for (const o of others.values()){
-    const vis = o.d && o.d.w === me && state !== 'intro';
+    const vis = o.d && o.d.w === me && me !== 'hub';
     o.av.group.visible = !!vis; if (!vis) continue;
     if (o.pos.distanceTo(o.target) > 25) o.pos.copy(o.target);
     const bx = o.pos.x, bz = o.pos.z; o.pos.lerp(o.target, 1 - Math.exp(-12*dt));
@@ -1118,7 +1432,7 @@ function updateOthers(dt){
   }
 }
 async function initCapabilities(){
-  if (!window.claude?.use) { renderPeople(); return; }
+  if (!window.claude?.use){ renderPeople(); return; }
   mpState = 'wait'; renderPeople();
   try {
     const user = await window.claude.use('user');
@@ -1131,7 +1445,7 @@ async function initCapabilities(){
         const snap = await Promise.race([db.doc(`data/users/${uid}/save`).get(), new Promise(r => setTimeout(() => r(null), 10000))]).catch(() => null);
         if (snap){
           cloud = {...cloud, db, uid, ok:true};
-          if (snap.exists){ const d = sanitizeSave(snap.data()); if (d.updatedAt > save.updatedAt){ save = d; heroAv.apply(save.av); renderCoins(); if (save.name && state === 'intro') $('nameIn').value = save.name; try { localStorage.setItem('rodzo-save', JSON.stringify(save)); } catch(e){} } }
+          if (snap.exists){ const d = sanitizeSave(snap.data()); if (d.updatedAt > save.updatedAt){ save = d; heroAv.apply(save.av); renderCoins(); if (save.name && state === 'intro') $('nameIn').value = save.name; if (state === 'hub') renderHub(); try { localStorage.setItem('rodzo-save', JSON.stringify(save)); } catch(e){} } }
         }
       }
     }
@@ -1149,15 +1463,16 @@ async function initCapabilities(){
 /* ---------- Contrôles ---------- */
 const locked = () => document.pointerLockElement === canvas;
 const typing = () => document.activeElement && ['INPUT','TEXTAREA'].includes(document.activeElement.tagName);
+const moving = () => (state === 'play' || state === 'salon') && !panel;
 addEventListener('keydown', e => {
   if (typing()) return;
   if (e.target.tagName === 'BUTTON' && (e.code === 'Space' || e.code === 'Enter')) return;
-  if (e.code === 'Enter' && (state === 'lobby' || state === 'play') && !panel){ e.preventDefault(); document.exitPointerLock?.(); $('chatIn').focus(); return; }
-  if (panel) return;
+  if (e.code === 'Enter' && moving()){ e.preventDefault(); document.exitPointerLock?.(); $('chatIn').focus(); return; }
+  if (!moving()) return;
   keys[e.code] = true;
   if (e.code === 'Space'){ e.preventDefault(); if (!e.repeat) jumpBuf = 0.14; }
   if (e.code === 'KeyF' && !e.repeat) throwStone();
-  if (e.code === 'KeyR' && (state === 'play' || state === 'lobby') && !swimming && deadT <= 0) respawn();
+  if (e.code === 'KeyR' && deadT <= 0 && !caught) respawn();
   if (e.code.startsWith('Arrow')) e.preventDefault();
 });
 addEventListener('keyup', e => { keys[e.code] = false; });
@@ -1170,7 +1485,7 @@ canvas.addEventListener('pointerdown', e => {
   if (typing()) document.activeElement.blur();
   if (e.pointerType === 'mouse'){
     if (locked()){ if (e.button === 0) throwStone(); return; }
-    if ((state === 'play' || state === 'lobby') && !panel){ try { const r = canvas.requestPointerLock?.(); r?.catch?.(() => {}); } catch(err){} }
+    if (moving()){ try { const r = canvas.requestPointerLock?.(); r?.catch?.(() => {}); } catch(err){} }
   }
   canvas.setPointerCapture?.(e.pointerId);
   if (e.pointerType === 'touch' && e.clientX < innerWidth*0.45 && joy.id === null){
@@ -1196,14 +1511,19 @@ canvas.addEventListener('wheel', e => { e.preventDefault(); dist = Math.min(18, 
 $('jumpBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); jumpBuf = 0.14; });
 $('throwBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); throwStone(); });
 
-/* ---------- Bruits et monstre ---------- */
+/* ---------- Bruits ---------- */
 function makeNoise(x, z, L){
-  if (state !== 'play' || mon.state === 'attack' || regionOf(x, z) !== mon.region) return;
+  if (state !== 'play') return;
+  if (game === 'pool') return crHear(x, z, L);
+  if (game !== 'parkour' || mon.state === 'attack' || regionOf(x, z) !== mon.region) return;
   if (Math.hypot(x - mon.pos.x, z - mon.pos.z) > L*8 || L < mon.ignoreBelow) return;
   mon.target.set(x, 0, z); mon.lastL = L;
   if (L >= 8){ mon.state = 'hunt'; mon.noChase = 2.5; }
   else if (mon.state !== 'chase') mon.state = 'hunt';
 }
+function playerNoise(L){ lastNoiseT = worldT; makeNoise(pl.pos.x, pl.pos.z, L); }
+
+/* ---------- Serpent (Rodzo Parkour) ---------- */
 function clampToRegion(p){
   if (mon.region === 'pool'){ p.x = Math.min(POOL.x1, Math.max(POOL.x0, p.x)); p.z = Math.min(POOL.z1, Math.max(POOL.z0, p.z)); }
   else if (inHall(p.x, p.z, 1)){
@@ -1224,7 +1544,7 @@ function relocateMonster(){
   mon.state = 'roam'; mon.target.copy(roamPoint()); initSegs();
 }
 function updateMonster(dt){
-  if (where() !== 'parkour'){ setMonsterVisible(false); return; }
+  if (!(inGame() && game === 'parkour')){ setMonsterVisible(false); return; }
   setMonsterVisible(true);
   const reg = regionOf(pl.pos.x, pl.pos.z);
   if (reg !== mon.region && mon.state !== 'attack') relocateMonster();
@@ -1233,7 +1553,6 @@ function updateMonster(dt){
   const vulnerable = state === 'play' && deadT <= 0 && (swimming || wet);
   const dP = Math.hypot(pl.pos.x - mon.pos.x, pl.pos.z - mon.pos.z);
   let speed = 2.5, turn = 1.6, depth = -4.6;
-
   if (mon.state === 'attack'){
     mon.attackT += dt; const k = Math.min(1, mon.attackT/0.45), e = 1 - (1-k)*(1-k);
     mon.pos.x += (pl.pos.x - Math.sin(mon.dir)*1.2 - mon.pos.x)*Math.min(1, dt*10);
@@ -1290,11 +1609,103 @@ function updateMonster(dt){
 function monsterCatch(){
   caught = false; deaths++; $('deaths').textContent = deaths; deadT = 1.15; hero.visible = false; sfx.roar();
   $('scare').hidden = false; setTimeout(() => $('scare').hidden = true, 950);
-  tip('Le monstre t\'a eu. Lance une pierre loin de toi dès que tu touches l\'eau.', 4, true);
+  tip(game === 'pool' ? 'La créature t\'a eu. Marche sans bruit (Maj) quand elle est proche, et lance des pierres pour l\'éloigner.' : 'Le monstre t\'a eu. Lance une pierre loin de toi dès que tu touches l\'eau.', 5, true);
 }
 { let d = 'M60 175'; for (let i = 0; i <= 16; i++){ const t = i/16, x = 60 + t*280, y = 175 + Math.sin(t*Math.PI)*58; d += ` L${x.toFixed(0)} ${(y + (i % 2 ? 26 : -2)).toFixed(0)}`; }
   d += ' Z M80 200'; for (let i = 0; i <= 14; i++){ const t = i/14, x = 80 + t*240, y = 200 + Math.sin(t*Math.PI)*62; d += ` L${x.toFixed(0)} ${(y + (i % 2 ? -26 : 4)).toFixed(0)}`; }
   $('teeth').setAttribute('d', d + ' Z'); }
+
+/* ---------- Rampeur (Salles-Piscines) ---------- */
+function crRoamPoint(){
+  const near = prSlabs.filter(s => Math.hypot(s.c.x - pl.pos.x, s.c.z - pl.pos.z) < 40);
+  const list = near.length ? near : prSlabs, s = list[Math.floor(Math.random()*list.length)];
+  return new V3(s.c.x + (Math.random()-.5)*4, 0, s.c.z + (Math.random()-.5)*4);
+}
+function crRelocate(atStart = false){
+  const far = prSlabs.filter(s => Math.hypot(s.c.x - pl.pos.x, s.c.z - pl.pos.z) > (atStart ? 55 : 40));
+  const s = far[Math.floor(Math.random()*far.length)] || prSlabs[prSlabs.length - 1];
+  cr.pos.set(s.c.x, 0, s.c.z); cr.y = s.max.y; cr.state = 'roam'; cr.target.copy(crRoamPoint()); cr.attackT = 0; cr.swim = false;
+  crBody.rotation.x = 0;
+}
+function crHear(x, z, L){
+  if (cr.state === 'attack' || !inPR(x)) return;
+  if (Math.hypot(x - cr.pos.x, z - cr.pos.z) > L*8 || L < cr.ignoreBelow) return;
+  cr.target.set(x, 0, z); cr.lastL = L;
+  if (L >= 7){ cr.state = 'hunt'; cr.noChase = 2.5; }
+  else if (cr.state !== 'chase') cr.state = 'hunt';
+}
+function updateCrawler(dt){
+  if (!(inGame() && game === 'pool')){ setCrawlerVisible(false); return; }
+  setCrawlerVisible(true);
+  cr.ignoreT -= dt; if (cr.ignoreT <= 0) cr.ignoreBelow = 0;
+  cr.noChase -= dt;
+  const alive = state === 'play' && deadT <= 0;
+  const dP = Math.hypot(pl.pos.x - cr.pos.x, pl.pos.z - cr.pos.z), dy = Math.abs(pl.pos.y - cr.y);
+  const noisy = worldT - lastNoiseT < 0.8 || swimming;
+  let speed = 2, turn = 2;
+  if (cr.state === 'attack'){
+    cr.attackT += dt; const k = Math.min(1, cr.attackT/0.45), e = 1 - (1-k)*(1-k);
+    cr.pos.x += (pl.pos.x - Math.sin(cr.dir)*1.1 - cr.pos.x)*Math.min(1, dt*10);
+    cr.pos.z += (pl.pos.z - Math.cos(cr.dir)*1.1 - cr.pos.z)*Math.min(1, dt*10);
+    crBody.rotation.x = -0.8*e; crJaw.rotation.x = 0.9*e; crLight.intensity = 2.5;
+    if (cr.attackT > 0.5 && caught) monsterCatch();
+    if (cr.attackT > 1.2) crRelocate();
+    cr.speed = 0;
+  } else {
+    if (alive && dP < 6 && noisy && cr.noChase <= 0) cr.state = 'chase';
+    if (cr.state === 'chase'){
+      if (!alive || (!noisy && dP > 3)){ cr.state = 'search'; cr.timer = 3; }
+      else {
+        cr.target.set(pl.pos.x, 0, pl.pos.z); speed = 8; turn = 6;
+        if (dP < 1.5 && dy < 2.2){ cr.state = 'attack'; cr.attackT = 0; caught = true; pl.vel.set(0,0,0); cr.dir = Math.atan2(pl.pos.x - cr.pos.x, pl.pos.z - cr.pos.z); }
+      }
+    } else if (cr.state === 'hunt'){
+      speed = 6.5; turn = 4;
+      if (Math.hypot(cr.target.x - cr.pos.x, cr.target.z - cr.pos.z) < 1.2){
+        cr.state = 'search'; cr.timer = 3;
+        if (cr.lastL >= 7){ cr.ignoreBelow = 4; cr.ignoreT = 4; cr.noChase = 4; }
+      }
+    } else if (cr.state === 'search'){
+      speed = 2.2; turn = 2.5; cr.timer -= dt;
+      cr.target.set(cr.pos.x + Math.sin(cr.dir + 1.3)*3, 0, cr.pos.z + Math.cos(cr.dir + 1.3)*3);
+      if (cr.timer <= 0){ cr.state = 'roam'; cr.target.copy(crRoamPoint()); }
+    } else {
+      if (Math.hypot(cr.target.x - cr.pos.x, cr.target.z - cr.pos.z) < 1.5 || Math.random() < dt*0.04) cr.target.copy(crRoamPoint());
+    }
+    const want = Math.atan2(cr.target.x - cr.pos.x, cr.target.z - cr.pos.z), diff = wrapA(want - cr.dir);
+    cr.dir += Math.max(-turn*dt, Math.min(turn*dt, diff));
+    let sp = speed*(Math.abs(diff) > 1.3 ? 0.4 : 1)*(cr.swim ? 0.7 : 1);
+    const nx = cr.pos.x + Math.sin(cr.dir)*sp*dt, nz = cr.pos.z + Math.cos(cr.dir)*sp*dt;
+    const blocked = prPillars.find(p => Math.hypot(nx - p.x, nz - p.z) < p.r + 0.9);
+    if (blocked){ const side = wrapA(Math.atan2(blocked.x - cr.pos.x, blocked.z - cr.pos.z) - cr.dir) > 0 ? -1 : 1; cr.dir += side*3*dt; sp *= 0.4; }
+    else { cr.pos.x = nx; cr.pos.z = nz; }
+    cr.pos.x = Math.min(PR.x1 - 1, Math.max(PR.x0 + 1, cr.pos.x)); cr.pos.z = Math.min(PR.z1 - 1, Math.max(PR.z0 + 1, cr.pos.z));
+    cr.speed = sp;
+    crBody.rotation.x += (0 - crBody.rotation.x)*Math.min(1, dt*6);
+    const hunting = cr.state === 'hunt' || cr.state === 'chase';
+    crJaw.rotation.x = (hunting ? 0.35 : 0.08) + Math.sin(worldT*(hunting ? 10 : 2))*0.06;
+    crLight.intensity += ((hunting ? 1.3 : 0.3) - crLight.intensity)*Math.min(1, dt*3);
+    if (hunting && dP < 30 && state === 'play'){ cr.clickT -= dt; if (cr.clickT <= 0){ cr.clickT = cr.state === 'chase' ? 0.35 : 0.7; sfx.click(1 - dP/30); } }
+    if (cr.swim && sp > 1){ cr.wakeT -= dt; if (cr.wakeT <= 0){ cr.wakeT = 0.3; ring(cr.pos.x, cr.pos.z, 0.9, 0xcfe6c8, PR.w); } }
+  }
+  // Hauteur : sur une dalle on marche, sinon on nage
+  const gt = groundTop(cr.pos.x, cr.pos.z);
+  const onSlab = gt !== null && gt <= cr.y + 1.5;
+  cr.swim = !onSlab;
+  const ty = onSlab ? gt : PR.w - 0.8;
+  cr.y += (ty - cr.y)*Math.min(1, dt*(ty > cr.y ? 10 : 6));
+  crG.position.set(cr.pos.x, cr.y, cr.pos.z); crG.rotation.y = cr.dir;
+  cr.gait += Math.max(cr.speed, 0.4)*dt*(cr.swim ? 3.2 : 2.2);
+  const k = Math.min(1, cr.speed/3 + 0.15);
+  crLegs.forEach(L => {
+    const s = Math.sin(cr.gait + L.phase);
+    L.hip.rotation.y = s*0.5*k*(cr.swim ? 1.3 : 1);
+    L.hip.rotation.z = L.side*(2.2 + Math.max(0, Math.cos(cr.gait + L.phase))*0.3*k);
+  });
+  crBody.position.y = 0.9 + Math.sin(cr.gait*2)*0.04 - (cr.swim ? 0.25 : 0);
+  if (cr.state === 'chase' || cr.state === 'attack') crHead.rotation.y = Math.max(-0.6, Math.min(0.6, wrapA(Math.atan2(pl.pos.x - cr.pos.x, pl.pos.z - cr.pos.z) - cr.dir)));
+  else crHead.rotation.y = Math.sin(worldT*0.8)*0.35;
+}
 
 /* ---------- Physique du joueur ---------- */
 function overlaps(s, x0,y0,z0){
@@ -1310,7 +1721,7 @@ function moveAxis(ax, d){
       else if (d > 0){ pl.pos.y = s.min.y - HY; pl.vel.y = 0; }
       else { pl.pos.y = s.max.y; pl.vel.y = 0; grounded = true; ground = s; }
     } else {
-      if (swimming && s.max.y <= WATER_Y + 0.9 && !s.wall) climbTo = s;
+      if (swimming && s.max.y <= waterLevel(pl.pos.x) + 0.9 && !s.wall) climbTo = s;
       if (d > 0) pl.pos[ax] = s.min[ax] - HX;
       else if (d < 0) pl.pos[ax] = s.max[ax] + HX;
       else pl.pos[ax] = (pl.pos[ax] - s.min[ax] < s.max[ax] - pl.pos[ax]) ? s.min[ax] - HX : s.max[ax] + HX;
@@ -1319,7 +1730,7 @@ function moveAxis(ax, d){
 }
 function enterWater(){
   swimming = true; swimT = 0; strokeT = 0.6; pl.vel.set(pl.vel.x*0.3, 0, pl.vel.z*0.3);
-  splash(pl.pos.x, pl.pos.z, 1.3); sfx.splash(1.2); makeNoise(pl.pos.x, pl.pos.z, 12);
+  splash(pl.pos.x, pl.pos.z, 1.3); sfx.splash(1.2); playerNoise(12);
 }
 function updateWorld(dt){
   worldT += dt;
@@ -1345,7 +1756,7 @@ function updateWorld(dt){
   updateStones(dt);
 }
 function readInput(){
-  if (panel || typing()) return {x:0, z:0, mag:0};
+  if (!moving() || typing()) return {x:0, z:0, mag:0};
   let ix = 0, iz = 0;
   if (keys.KeyW || keys.ArrowUp) iz += 1;
   if (keys.KeyS || keys.ArrowDown) iz -= 1;
@@ -1362,46 +1773,72 @@ let portalLatch = false;
 function updatePlayer(dt){
   if (deadT > 0){ deadT -= dt; if (deadT <= 0) respawn(); return; }
   if (caught) return;
-  const inp = readInput();
+  const inp = readInput(), wl = waterLevel(pl.pos.x);
 
   if (swimming){
     const a = Math.min(1, 5*dt);
     pl.vel.x += (inp.x*SWIM - pl.vel.x)*a; pl.vel.z += (inp.z*SWIM - pl.vel.z)*a; pl.vel.y = 0;
-    pl.pos.y += (WATER_Y - 1.3 - pl.pos.y)*Math.min(1, 6*dt);
+    pl.pos.y += (wl - 1.3 - pl.pos.y)*Math.min(1, 6*dt);
     climbTo = null; moveAxis('x', pl.vel.x*dt); moveAxis('z', pl.vel.z*dt);
+    jumpBuf -= dt;
+    if (jumpBuf > 0){   // sauter hors de l'eau
+      jumpBuf = 0; swimming = false; pl.pos.y = wl - 0.6; pl.vel.y = SWIM_JUMP;
+      pl.vel.x = inp.x*SPEED; pl.vel.z = inp.z*SPEED; grounded = false;
+      ring(pl.pos.x, pl.pos.z, 1, 0xe8fbff, wl); sfx.splash(0.5); sfx.jump(); playerNoise(3);
+      if ($('tip').classList.contains('warn')) $('tip').hidden = true;
+      return;
+    }
     if (climbTo && inp.mag > 0.2){
       pl.pos.y = climbTo.max.y; pl.pos.x += inp.x*0.7; pl.pos.z += inp.z*0.7; swimming = false; pl.vel.set(0,0,0);
       $('tip').hidden = true; return;
     }
     swimT += dt; strokeT -= dt;
-    if (inp.mag > 0.2 && strokeT <= 0){ strokeT = 0.55; ring(pl.pos.x, pl.pos.z, 0.6); sfx.step(); makeNoise(pl.pos.x, pl.pos.z, 2.5); }
-    tip(`Dans l'eau ! Le monstre entend tes éclaboussures. Lance une pierre au loin. Remontée dans ${Math.max(0, Math.ceil(RESCUE - swimT))} s`, 0, true);
-    if (swimT >= RESCUE){ respawn(); toast('Ouf', 'Repêché !'); }
+    if (inp.mag > 0.2 && strokeT <= 0){ strokeT = 0.55; ring(pl.pos.x, pl.pos.z, 0.6, 0xe8fbff, wl); sfx.step(); playerNoise(2.5); }
+    if (game === 'parkour'){
+      tip(`Dans l'eau ! Espace pour sauter sur une plateforme, ou lance une pierre au loin. Retour au point de sauvegarde dans ${Math.max(0, Math.ceil(RESCUE - swimT))} s`, 0, true);
+      if (swimT >= RESCUE){ respawn(); toast('Ouf', 'Repêché !'); }
+    } else if (!seenTips.has('swim2')){ seenTips.add('swim2'); tip('Tu nages : chaque brasse fait du bruit. Espace pour sauter sur une plateforme.', 5, true); }
     return;
   }
 
   const spd = sneaking ? SNEAK : SPEED, a = Math.min(1, (grounded ? 16 : 7)*dt);
   pl.vel.x += (inp.x*spd - pl.vel.x)*a; pl.vel.z += (inp.z*spd - pl.vel.z)*a;
   coyote = grounded ? 0.1 : coyote - dt; jumpBuf -= dt;
-  if (jumpBuf > 0 && coyote > 0 && !panel){ pl.vel.y = JUMP; coyote = 0; jumpBuf = 0; grounded = false; ground = null; sfx.jump(); }
+  if (jumpBuf > 0 && coyote > 0 && moving()){ pl.vel.y = JUMP; coyote = 0; jumpBuf = 0; grounded = false; ground = null; sfx.jump(); }
   pl.vel.y = Math.max(-45, pl.vel.y - G*dt);
 
   prevGrounded = grounded; grounded = false; ground = null;
   moveAxis('x', pl.vel.x*dt); moveAxis('z', pl.vel.z*dt); moveAxis('y', pl.vel.y*dt);
   wet = !!(grounded && ground && ground.sub);
+  const hs = Math.hypot(pl.vel.x, pl.vel.z);
 
-  if (state === 'lobby'){
-    const p = portals.find(p => p.active && Math.abs(pl.pos.x - p.x) < 2 && pl.pos.z < LOBBY.z0 + 2.2);
-    if (p && !portalLatch && !panel){ portalLatch = true; setPanel('games'); }
+  if (state === 'salon'){
+    const p = portals.find(p => Math.abs(pl.pos.x - p.x) < 2 && pl.pos.z < LOBBY.z0 + 2.2);
+    if (p && !portalLatch && !panel){ portalLatch = true; openDetail(p.id); }
     if (!p) portalLatch = false;
     if (pl.pos.y < -6) respawn();
     return;
   }
-  if (!grounded && pl.pos.y < WATER_Y - 0.3) return enterWater();
+  if (!grounded && pl.vel.y <= 0 && pl.pos.y < wl - 0.3) return enterWater();
+
+  if (game === 'pool'){
+    if (grounded && !prevGrounded) playerNoise(sneaking ? 1.2 : 3.5);
+    if (grounded && hs > 1){ stepT -= dt; if (stepT <= 0){ stepT = sneaking ? 0.5 : 0.32; if (!sneaking){ sfx.step(); playerNoise(2); } } }
+    for (const k of prKeys){
+      if (k.got) continue;
+      if (Math.hypot(pl.pos.x - k.p.x, pl.pos.z - k.p.z) < 1.4 && Math.abs(pl.pos.y + 1 - k.p.y) < 2){
+        k.got = true; k.g.visible = false; PRG.keys++; renderObjective(); sfx.key(); sendPresence(true);
+        if (PRG.keys >= KEYS){ setDoor(true); toast('Tous les jetons !', 'La sortie est ouverte'); tip('Cherche le panneau SORTIE vert, au fond de la salle à l\'opposé du départ.', 7); }
+        else toast(`Jeton ${PRG.keys} sur ${KEYS}`, 'Continue à chercher');
+      }
+    }
+    if (PRG.open && Math.hypot(pl.pos.x - PRG.door.x, pl.pos.z - PRG.door.z) < 2.6 && pl.pos.y < 3){ win(); return; }
+    if (pl.pos.y < -10) respawn();
+    return;
+  }
   if (wet){
-    if (!prevGrounded){ ring(pl.pos.x, pl.pos.z, sneaking ? 0.6 : 1); sfx.step(); makeNoise(pl.pos.x, pl.pos.z, sneaking ? 1.5 : 4); }
-    const hs = Math.hypot(pl.vel.x, pl.vel.z);
-    if (hs > 1){ stepT -= dt; if (stepT <= 0){ stepT = sneaking ? 0.5 : 0.3; ring(pl.pos.x, pl.pos.z, sneaking ? 0.35 : 0.7); if (!sneaking){ sfx.step(); makeNoise(pl.pos.x, pl.pos.z, 2); } } }
+    if (!prevGrounded){ ring(pl.pos.x, pl.pos.z, sneaking ? 0.6 : 1); sfx.step(); playerNoise(sneaking ? 1.5 : 4); }
+    if (hs > 1){ stepT -= dt; if (stepT <= 0){ stepT = sneaking ? 0.5 : 0.3; ring(pl.pos.x, pl.pos.z, sneaking ? 0.35 : 0.7); if (!sneaking){ sfx.step(); playerNoise(2); } } }
   }
   if (ground){
     if (ground.cp !== undefined && ground.cp > cp) setCheckpoint(ground.cp);
@@ -1431,17 +1868,40 @@ function burst(){
 let viewShift = null;
 function resize(){ const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w/h; viewShift = null; camera.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
+
+/* Vignettes des jeux, rendues depuis le vrai monde 3D */
+function makeThumbs(){
+  const shots = [
+    {id:'pool', fog:FOG.pr, from:[PRG.spawn.x + 4, 3.2, PRG.spawn.z - 4], to:[PRG.spawn.x + 30, 1.2, PRG.spawn.z - 30], crawler:[PRG.spawn.x + 14, PRG.spawn.z - 15]},
+    {id:'parkour', fog:FOG.out, from:[14, 12, 16], to:[0, 2, -34]},
+    {id:'salon', fog:FOG.lobby, from:[LX + 8, 5, LZ + 16], to:[LX, 3, LZ - 20]},
+  ];
+  const out = document.createElement('canvas'); out.width = 480; out.height = 270; const ctx = out.getContext('2d');
+  camera.clearViewOffset(); viewShift = null;
+  renderer.setSize(640, 360, false); camera.aspect = 16/9; camera.updateProjectionMatrix();
+  const heroWas = hero.visible; hero.visible = false;
+  for (const s of shots){
+    scene.fog.color.copy(s.fog.c); scene.fog.near = s.fog.n; scene.fog.far = s.fog.f;
+    setCrawlerVisible(!!s.crawler); setMonsterVisible(false);
+    if (s.crawler){ const gt = groundTop(s.crawler[0], s.crawler[1]); crG.position.set(s.crawler[0], gt ?? 0.6, s.crawler[1]); crG.rotation.y = Math.PI*0.75; }
+    camera.position.set(...s.from); camera.lookAt(...s.to);
+    try { renderer.render(scene, camera); ctx.drawImage(renderer.domElement, 0, 0, 480, 270); THUMBS[s.id] = out.toDataURL('image/jpeg', 0.82); } catch(e){}
+  }
+  hero.visible = heroWas; setCrawlerVisible(false);
+  resize();
+}
+
 const ray = new THREE.Raycaster();
 let last = performance.now(), hudT = 0, heartT = 0, danger = 0;
 function frame(now){
   requestAnimationFrame(frame);
   const dt = Math.min((now - last)/1000, 0.05); last = now;
   const n = Math.ceil(dt/(1/120)), h = dt/n;
-  for (let i = 0; i < n; i++){ updateWorld(h); if (state === 'play' || state === 'lobby') updatePlayer(h); }
-  updateMonster(dt); updateFx(dt); updateOthers(dt);
+  for (let i = 0; i < n; i++){ updateWorld(h); if (state === 'play' || state === 'salon') updatePlayer(h); }
+  updateMonster(dt); updateCrawler(dt); updateFx(dt); updateOthers(dt);
   sendT -= dt; if (sendT <= 0){ sendT = 0.1; sendPresence(); }
   if (state === 'play'){ runTime += dt; hudT -= dt; if (hudT <= 0){ $('time').textContent = fmt(runTime); hudT = 0.1; } }
-  const active = (state === 'play' || state === 'lobby') && !panel;
+  const active = moving();
   $('lockHint').hidden = !(active && !isTouch && !locked());
   $('cross').hidden = !(state === 'play' && locked());
   if (heroBubble.visible && now > (heroBubble.userData.until || 0)) setLabel(heroBubble, '', true);
@@ -1451,11 +1911,12 @@ function frame(now){
   const hs = Math.hypot(pl.vel.x, pl.vel.z);
   if (hs > 0.6 && active && !caught){ const d = wrapA(Math.atan2(pl.vel.x, pl.vel.z) - pl.face); pl.face += d*Math.min(1, 14*dt); }
   hero.rotation.y = pl.face;
-  heroAv.animate(dt, hs, swimming ? 2 : (grounded || state === 'intro' || state === 'won' ? 0 : 1), worldT);
+  heroAv.animate(dt, active ? hs : 0, swimming ? 2 : (grounded || !active ? 0 : 1), worldT);
   if (caught){ heroAv.armL.rotation.z = -2.4; heroAv.armR.rotation.z = 2.4; }
   if (throwAnim > 0){ throwAnim -= dt; heroAv.armR.rotation.x = -2.6 + (0.35 - throwAnim)*7; }
   { const p = flag.geometry.attributes.position; for (let i = 0; i < p.count; i++){ const x = p.getX(i); p.setZ(i, Math.sin(x*3 + worldT*5)*0.15*(x+0.9)); } p.needsUpdate = true; }
   portals.forEach(p => { if (p.light) p.light.intensity = 0.7 + Math.sin(worldT*3)*0.25; });
+  prKeys.forEach((k, i) => { if (!k.got){ k.g.rotation.y += dt*1.6; k.g.position.y = k.p.y + Math.sin(worldT*2 + i)*0.12; } });
 
   // Visée
   const pr = state === 'play' && !panel && stones > 0 && deadT <= 0 && !caught ? predict() : null;
@@ -1463,26 +1924,27 @@ function frame(now){
   if (pr){ aim.position.set(pr.x, pr.y, pr.z); aim.material.color.set(pr.water ? 0x9ff0ff : 0xffd166); }
 
   // Caméra
-  const show = state === 'intro' || panel === 'avatar';
+  const show = state === 'intro' || state === 'hub' || panel === 'avatar' || panel === 'friends';
   const tYaw = show ? pl.face + 0.45 + Math.sin(worldT*0.4)*0.2 : yaw, tPitch = show ? 0.16 : pitch, tDist = show ? 6 : dist;
   const ck = show || state === 'won' || panel ? Math.min(1, dt*3) : 1;
   cam.yaw += wrapA(tYaw - cam.yaw)*ck; cam.pitch += (tPitch - cam.pitch)*ck; cam.dist += (tDist - cam.dist)*ck;
   const wantShift = (show || !!panel) && innerWidth >= 860;
-  if (wantShift !== viewShift){ if (wantShift) camera.setViewOffset(innerWidth, innerHeight, -innerWidth*0.2, 0, innerWidth, innerHeight); else camera.clearViewOffset(); viewShift = wantShift; }
+  if (wantShift !== viewShift){ if (wantShift) camera.setViewOffset(innerWidth, innerHeight, -innerWidth*0.22, 0, innerWidth, innerHeight); else camera.clearViewOffset(); viewShift = wantShift; }
   camTarget.lerp(new V3(pl.pos.x, pl.pos.y + (show ? 1.2 : 1.5), pl.pos.z), 1 - Math.exp(-10*dt));
   const dir = new V3(Math.sin(cam.yaw)*Math.cos(cam.pitch), Math.sin(cam.pitch), Math.cos(cam.yaw)*Math.cos(cam.pitch));
   let cd = cam.dist;
-  if (inHall(pl.pos.x, pl.pos.z, 12) || inLobby(pl.pos.x)){ ray.set(camTarget, dir); ray.far = cd; const hit = ray.intersectObjects(camBlockers)[0]; if (hit) cd = Math.max(1.2, hit.distance - 0.3); }
+  if (inHall(pl.pos.x, pl.pos.z, 12) || inLobby(pl.pos.x) || inPR(pl.pos.x)){ ray.set(camTarget, dir); ray.far = cd; const hit = ray.intersectObjects(camBlockers)[0]; if (hit) cd = Math.max(1.2, hit.distance - 0.3); }
   camera.position.copy(camTarget).addScaledVector(dir, cd);
   camera.lookAt(camTarget);
 
   // Ambiance
-  const area = inLobby(pl.pos.x) ? FOG.lobby : (inHall(camera.position.x, camera.position.z) || inHall(pl.pos.x, pl.pos.z)) ? FOG.hall : FOG.out;
+  const area = inLobby(pl.pos.x) ? FOG.lobby : inPR(pl.pos.x) ? FOG.pr : (inHall(camera.position.x, camera.position.z) || inHall(pl.pos.x, pl.pos.z)) ? FOG.hall : FOG.out;
   const fk = Math.min(1, dt*2.5);
   scene.fog.color.lerp(area.c, fk); scene.fog.near += (area.n - scene.fog.near)*fk; scene.fog.far += (area.f - scene.fog.far)*fk;
   lampB.intensity = Math.random() < 0.06 ? 0.1 : 0.8; if (lampB.userData.mesh) lampB.userData.mesh.visible = lampB.intensity > 0.3;
   for (const s of smoke){
     const b = s.box;
+    if (pl.pos.x < b.x0 - 80 || pl.pos.x > b.x1 + 80) continue;
     s.m.position.x += s.vx*dt; s.m.position.z += s.vz*dt;
     if (s.m.position.x < b.x0) s.m.position.x = b.x1; if (s.m.position.x > b.x1) s.m.position.x = b.x0;
     if (s.m.position.z < b.z0) s.m.position.z = b.z1; if (s.m.position.z > b.z1) s.m.position.z = b.z0;
@@ -1492,11 +1954,12 @@ function frame(now){
   sun.position.set(pl.pos.x - 18, pl.pos.y + 34, pl.pos.z + 12);
   sun.target.position.copy(pl.pos); sun.target.updateMatrixWorld();
   waveTex.offset.x = worldT*0.012; waveTex.offset.y = Math.sin(worldT*0.25)*0.03;
-  greenTex.offset.x = worldT*0.006; greenTex.offset.y = Math.cos(worldT*0.2)*0.02;
+  greenTex.offset.x = greenTexBig.offset.x = worldT*0.006; greenTex.offset.y = greenTexBig.offset.y = Math.cos(worldT*0.2)*0.02;
 
   // Danger
-  const md = Math.hypot(pl.pos.x - mon.pos.x, pl.pos.z - mon.pos.z);
-  const threat = state === 'play' && ['hunt','chase','attack'].includes(mon.state) ? Math.max(0, 1 - md/22) : 0;
+  let threat = 0;
+  if (state === 'play' && game === 'parkour' && ['hunt','chase','attack'].includes(mon.state)) threat = Math.max(0, 1 - Math.hypot(pl.pos.x - mon.pos.x, pl.pos.z - mon.pos.z)/22);
+  if (state === 'play' && game === 'pool' && ['hunt','chase','attack'].includes(cr.state)) threat = Math.max(0, 1 - Math.hypot(pl.pos.x - cr.pos.x, pl.pos.z - cr.pos.z)/25);
   danger += (threat - danger)*Math.min(1, dt*3);
   $('danger').style.opacity = danger.toFixed(3);
   if (danger > 0.3 && state === 'play'){ heartT -= dt; if (heartT <= 0){ heartT = 0.95 - danger*0.45; sfx.heart(danger); } }
@@ -1510,7 +1973,9 @@ function frame(now){
 }
 
 /* Démarrage */
-setState('intro'); respawn(); pl.face = 0; setMonsterVisible(false); camTarget.set(pl.pos.x, pl.pos.y+1.2, pl.pos.z);
+setState('intro'); respawn(); setMonsterVisible(false); camTarget.set(pl.pos.x, pl.pos.y+1.2, pl.pos.z);
+makeThumbs();
+scene.fog.color.copy(FOG.lobby.c); scene.fog.near = FOG.lobby.n; scene.fog.far = FOG.lobby.f;
 renderPeople(); initCapabilities();
 requestAnimationFrame(t => { last = t; frame(t); });
 })();

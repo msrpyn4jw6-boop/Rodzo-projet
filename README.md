@@ -1,10 +1,18 @@
 # Rodzo
 
-Un petit monde de jeux dans le navigateur : un lobby où l'on retrouve ses amis en direct, un éditeur d'avatar avec boutique, et un premier jeu, **Rodzo Parkour**.
+Un petit monde de jeux dans le navigateur, avec un menu d'accueil façon plateforme de jeux : recherche, catégories (Horreur, Obby, Tycoon…), fiche de chaque jeu et bouton Jouer.
+
+Jeux disponibles :
+- **Les Salles-Piscines** : une immense salle carrelée noyée de brume, avec de grandes plateformes au-dessus d'une eau verte. Il faut trouver 5 jetons puis la sortie, pendant qu'une créature noire à quatre pattes marche sur les plateformes et nage. Elle se guide au bruit.
+- **Rodzo Parkour** : 9 étapes au-dessus de l'eau, avec un serpent attiré par les éclaboussures.
+- **Salon Rodzo** : l'espace social où l'on retrouve ses amis.
+- Annoncés « Bientôt » : Rodzo Tycoon, Cache-cache, Course de bateaux.
+
+Dans l'eau, Espace fait sauter sur une plateforme.
 
 ## Lobby, amis et avatar
 
-- **Lobby** : une grande salle-piscine carrelée, avec des portails vers les jeux (Rodzo Parkour ; d'autres jeux sont annoncés « Bientôt »).
+- **Salon** : une grande salle-piscine carrelée, avec des portails vers les jeux.
 - **Amis** : sur claude.ai, les personnes invitées à la page (menu Partager, par e-mail) se voient en direct dans le lobby et pendant les parties, avec leur pseudo et un chat. Avec le simple lien public, on joue seul.
 - **Avatar** : couleurs du corps, des jambes, de la peau, des yeux, chapeaux et accessoires de dos. Une partie est gratuite, le reste s'achète avec des **Rodzos**, la monnaie du jeu (gagnée aux étapes, à l'arrivée et avec le bonus du jour). Il n'y a pas de paiement en argent réel.
 - La sauvegarde (pseudo, Rodzos, objets) est gardée dans le navigateur et, quand c'est possible, dans le compte Claude du joueur.
